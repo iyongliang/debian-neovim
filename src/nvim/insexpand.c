@@ -265,6 +265,9 @@ static extmark_undo_vec_t compl_orig_extmarks;
 static int compl_cont_mode = 0;
 static expand_T compl_xp;
 
+static win_T *compl_curr_win = NULL;  ///< win where completion is active
+static buf_T *compl_curr_buf = NULL;  ///< buf where completion is active
+
 // List of flags for method of completion.
 static int compl_cont_status = 0;
 #define CONT_ADDING    1        ///< "normal" or "adding" expansion
@@ -1242,6 +1245,12 @@ static int ins_compl_build_pum(void)
   // match after it, don't highlight anything.
   bool shown_match_ok = match_at_original_text(compl_shown_match);
 
+  bool update_shown_match = fuzzy_filter;
+  if (fuzzy_filter && ctrl_x_mode_normal()
+      && compl_leader.data == NULL && compl_shown_match->cp_score > 0) {
+    update_shown_match = false;
+  }
+
   if (strequal(compl_leader.data, compl_orig_text.data) && !shown_match_ok) {
     compl_shown_match = compl_no_select ? compl_first_match : compl_first_match->cp_next;
   }
@@ -1290,7 +1299,7 @@ static int ins_compl_build_pum(void)
         }
         // Update the maximum fuzzy score and the shown match
         // if the current item's score is higher
-        if (fuzzy_sort && comp->cp_score > max_fuzzy_score) {
+        if (fuzzy_sort && comp->cp_score > max_fuzzy_score && update_shown_match) {
           did_find_shown_match = true;
           max_fuzzy_score = comp->cp_score;
           if (!compl_no_select) {
@@ -1747,6 +1756,8 @@ void ins_compl_clear(void)
   compl_matches = 0;
   compl_selected_item = -1;
   compl_ins_end_col = 0;
+  compl_curr_win = NULL;
+  compl_curr_buf = NULL;
   API_CLEAR_STRING(compl_pattern);
   API_CLEAR_STRING(compl_leader);
   edit_submode_extra = NULL;
@@ -1767,7 +1778,7 @@ bool ins_compl_active(void)
 /// Return true when wp is the actual completion window
 bool ins_compl_win_active(win_T *wp)
 {
-  return ins_compl_active() && !(wp->w_p_pvw || wp->w_float_is_info);
+  return ins_compl_active() && wp == compl_curr_win && wp->w_buffer == compl_curr_buf;
 }
 
 /// Selected one of the matches.  When false the match was edited or using the
@@ -2170,9 +2181,10 @@ static bool set_ctrl_x_mode(const int c)
 static bool ins_compl_stop(const int c, const int prev_mode, bool retval)
 {
   // Remove pre-inserted text when present.
-  if (ins_compl_preinsert_effect()) {
+  if (ins_compl_preinsert_effect() && ins_compl_win_active(curwin)) {
     ins_compl_delete(false);
   }
+
   // Get here when we have finished typing a sequence of ^N and
   // ^P or other completion characters in CTRL-X mode.  Free up
   // memory that was used, and make sure we can redo the insert.
@@ -2255,10 +2267,6 @@ static bool ins_compl_stop(const int c, const int prev_mode, bool retval)
     retval = true;
   }
 
-  if ((c == Ctrl_W || c == Ctrl_U) && ins_compl_preinsert_effect()) {
-    ins_compl_delete(false);
-  }
-
   auto_format(false, true);
 
   // Trigger the CompleteDonePre event to give scripts a chance to
@@ -2296,6 +2304,12 @@ static bool ins_compl_stop(const int c, const int prev_mode, bool retval)
   xfree(word);
 
   return retval;
+}
+
+/// Cancel completion.
+bool ins_compl_cancel(void)
+{
+  return ins_compl_stop(' ', ctrl_x_mode, true);
 }
 
 /// Prepare for Insert mode completion, or stop it.
@@ -2446,8 +2460,8 @@ static buf_T *ins_compl_next_buf(buf_T *buf, int flag)
     while (true) {
       // Move to next window (wrap to first window if at the end)
       wp = (wp->w_next != NULL) ? wp->w_next : firstwin;
-      // Break if we're back at start or found an unscanned buffer
-      if (wp == curwin || !wp->w_buffer->b_scanned) {
+      // Break if we're back at start or found an unscanned buffer (in a focusable window)
+      if (wp == curwin || (!wp->w_buffer->b_scanned && wp->w_config.focusable)) {
         break;
       }
     }
@@ -3938,7 +3952,7 @@ static compl_T *find_comp_when_fuzzy(void)
   if ((is_forward && compl_selected_item == compl_match_arraysize - 1)
       || (is_backward && compl_selected_item == 0)) {
     return compl_first_match != compl_shown_match
-           ? compl_first_match
+           ? (is_forward ? compl_shown_match->cp_next : compl_first_match)
            : (compl_first_match->cp_prev ? compl_first_match->cp_prev : NULL);
   }
 
@@ -4849,6 +4863,8 @@ int ins_complete(int c, bool enable_pum)
     return FAIL;
   }
 
+  compl_curr_win = curwin;
+  compl_curr_buf = curwin->w_buffer;
   compl_shown_match = compl_curr_match;
   compl_shows_dir = compl_direction;
 

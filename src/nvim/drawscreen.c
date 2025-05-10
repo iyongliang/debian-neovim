@@ -1700,6 +1700,17 @@ static void win_update(win_T *wp)
     }
   }
 
+  // Below logic compares wp->w_topline against wp->w_lines[0].wl_lnum,
+  // which may point to a line below wp->w_topline if it is concealed;
+  // incurring scrolling even though wp->w_topline is still the same.
+  // Compare against an adjusted topline instead:
+  linenr_T topline_conceal = wp->w_topline;
+  while (topline_conceal < buf->b_ml.ml_line_count
+         && decor_conceal_line(wp, topline_conceal - 1, false)) {
+    topline_conceal++;
+    hasFolding(wp, topline_conceal, NULL, &topline_conceal);
+  }
+
   // If there are no changes on the screen that require a complete redraw,
   // handle three cases:
   // 1: we are off the top of the screen by a few lines: scroll down
@@ -1712,12 +1723,12 @@ static void win_update(win_T *wp)
     if (mod_top != 0
         && wp->w_topline == mod_top
         && (!wp->w_lines[0].wl_valid
-            || wp->w_topline == wp->w_lines[0].wl_lnum)) {
+            || topline_conceal == wp->w_lines[0].wl_lnum)) {
       // w_topline is the first changed line and window is not scrolled,
       // the scrolling from changed lines will be done further down.
     } else if (wp->w_lines[0].wl_valid
-               && (wp->w_topline < wp->w_lines[0].wl_lnum
-                   || (wp->w_topline == wp->w_lines[0].wl_lnum
+               && (topline_conceal < wp->w_lines[0].wl_lnum
+                   || (topline_conceal == wp->w_lines[0].wl_lnum
                        && wp->w_topfill > wp->w_old_topfill))) {
       // New topline is above old topline: May scroll down.
       int j;
@@ -2178,20 +2189,10 @@ static void win_update(win_T *wp)
           // rows, and may insert/delete lines
           int j = idx;
           for (l = lnum; l < mod_bot; l++) {
-            linenr_T first = l;
-            int prev_rows = new_rows;
-            if (hasFolding(wp, l, NULL, &l)) {
-              new_rows += !decor_conceal_line(wp, first - 1, false);
-            } else if (l == wp->w_topline) {
-              int n = plines_win_nofill(wp, l, false) + wp->w_topfill
-                      - adjust_plines_for_skipcol(wp);
-              n = MIN(n, wp->w_height_inner);
-              new_rows += n;
-            } else {
-              new_rows += plines_win(wp, l, true);
-            }
-            // Do not increment when height was 0 (for a concealed line).
-            j += (prev_rows != new_rows);
+            int n = plines_win_full(wp, l, &l, NULL, true, false);
+            n -= (l == wp->w_topline ? adjust_plines_for_skipcol(wp) : 0);
+            new_rows += MIN(n, wp->w_height_inner);
+            j += n > 0;  // don't count concealed lines
             if (new_rows > wp->w_grid.rows - row - 2) {
               // it's getting too much, must redraw the rest
               new_rows = 9999;
@@ -2320,6 +2321,7 @@ static void win_update(win_T *wp)
 
         // Adjust "wl_lastlnum" for concealed lines below the last line in the window.
         while (row == wp->w_grid.rows
+               && wp->w_lines[idx].wl_lastlnum < buf->b_ml.ml_line_count
                && decor_conceal_line(wp, wp->w_lines[idx].wl_lastlnum, false)) {
           wp->w_lines[idx].wl_lastlnum++;
           hasFolding(wp, wp->w_lines[idx].wl_lastlnum, NULL, &wp->w_lines[idx].wl_lastlnum);

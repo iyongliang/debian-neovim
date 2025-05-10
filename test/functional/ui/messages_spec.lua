@@ -372,6 +372,50 @@ describe('ui/ext_messages', function()
     })
 
     feed('<CR>')
+    exec([[
+      set verbose=9
+      augroup verbose
+        autocmd BufEnter * echoh "BufEnter"
+        autocmd BufWinEnter * bdelete
+      augroup END
+    ]])
+    feed(':edit! foo<CR>')
+    screen:expect({
+      grid = s2,
+      cmdline = { { abort = false } },
+      messages = {
+        {
+          content = { { 'Executing BufEnter Autocommands for "*"' } },
+          history = true,
+          kind = 'verbose',
+        },
+        {
+          content = { { 'autocommand echoh "BufEnter"\n' } },
+          history = true,
+          kind = 'verbose',
+        },
+        {
+          content = { { 'Executing BufWinEnter Autocommands for "*"' } },
+          history = true,
+          kind = 'verbose',
+        },
+        {
+          content = { { 'autocommand bdelete\n' } },
+          history = true,
+          kind = 'verbose',
+        },
+        {
+          content = { { 'Press ENTER or type command to continue', 6, 18 } },
+          history = false,
+          kind = 'return_prompt',
+        },
+      },
+    })
+    feed('<CR>')
+    command('autocmd! verbose')
+    command('augroup! verbose')
+    command('set verbose=0')
+
     n.add_builddir_to_rtp()
     feed(':help<CR>:tselect<CR>')
     screen:expect({
@@ -406,7 +450,7 @@ describe('ui/ext_messages', function()
         screen.messages = {}
       end,
     })
-    feed('<CR>:bd<CR>')
+    feed('<CR>:bdelete<CR>$')
 
     -- kind=shell for :!cmd messages
     local cmd = t.is_os('win') and 'echo stdout& echo stderr>&2& exit 3'
@@ -1561,12 +1605,11 @@ stack traceback:
 
   it('g< mapping shows recent messages', function()
     command('echo "foo" | echo "bar"')
-    local s1 = [[
-      ^                         |
-      {1:~                        }|*4
-    ]]
     screen:expect({
-      grid = s1,
+      grid = [[
+        ^                         |
+        {1:~                        }|*4
+      ]],
       messages = {
         {
           content = { { 'bar' } },
@@ -1596,6 +1639,23 @@ stack traceback:
         {
           content = { { 'bar' } },
           kind = 'echo',
+        },
+      },
+    })
+  end)
+
+  it('single event for multiple :set options', function()
+    command('set sw ts sts')
+    screen:expect({
+      grid = [[
+        ^                         |
+        {1:~                        }|*4
+      ]],
+      messages = {
+        {
+          content = { { '  shiftwidth=8\n  tabstop=8\n  softtabstop=0' } },
+          history = false,
+          kind = 'list_cmd',
         },
       },
     })
