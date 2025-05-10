@@ -1,3 +1,9 @@
+neovim (0.10.2~bookworm) bookworm; urgency=medium
+
+  * Package v0.10.2 for debian
+
+ -- yongliang <neeyongliang@gmail.com>  Sat, 10 May 2025 16:03:48 +0100
+
 neovim (0.10.1~bookworm) bookworm; urgency=medium
 
   * Package v0.10.1 for debian
