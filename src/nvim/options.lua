@@ -1310,7 +1310,6 @@ return {
       ]=],
       full_name = 'comments',
       list = 'onecomma',
-      redraw = { 'curswant' },
       scope = { 'buffer' },
       short_desc = N_('patterns that can start a comment line'),
       tags = { 'E524', 'E525' },
@@ -1328,7 +1327,6 @@ return {
         add markers for folding, see |fold-marker|.
       ]=],
       full_name = 'commentstring',
-      redraw = { 'curswant' },
       scope = { 'buffer' },
       short_desc = N_('template for comments; used for fold marker'),
       tags = { 'E537' },
@@ -1956,7 +1954,6 @@ return {
         <
       ]=],
       full_name = 'define',
-      redraw = { 'curswant' },
       scope = { 'global', 'buffer' },
       short_desc = N_('pattern to be used to find a macro definition'),
       type = 'string',
@@ -4487,7 +4484,7 @@ return {
     {
       abbreviation = 'jop',
       cb = 'did_set_jumpoptions',
-      defaults = { if_true = '' },
+      defaults = { if_true = 'clean' },
       deny_duplicates = true,
       desc = [=[
         List of words that change the behavior of the |jumplist|.
@@ -4500,6 +4497,9 @@ return {
           view          When moving through the jumplist, |changelist|,
         		|alternate-file| or using |mark-motions| try to
         		restore the |mark-view| in which the action occurred.
+
+          clean         Remove unloaded buffers from the jumplist.
+        		EXPERIMENTAL: this flag may change in the future.
       ]=],
       expand_cb = 'expand_set_jumpoptions',
       full_name = 'jumpoptions',

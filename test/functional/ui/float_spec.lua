@@ -327,6 +327,35 @@ describe('float window', function()
     eq(12, pos[2])
   end)
 
+  it('error message when invalid field specified for split', function()
+    local bufnr = api.nvim_create_buf(false, true)
+    eq(
+      "non-float cannot have 'row'",
+      pcall_err(api.nvim_open_win, bufnr, true, { split = 'right', row = 10 })
+    )
+    eq(
+      "non-float cannot have 'col'",
+      pcall_err(api.nvim_open_win, bufnr, true, { split = 'right', col = 10 })
+    )
+    eq(
+      "non-float cannot have 'bufpos'",
+      pcall_err(api.nvim_open_win, bufnr, true, { split = 'right', bufpos = { 0, 0 } })
+    )
+    local winid = api.nvim_open_win(bufnr, true, { split = 'right' })
+    eq(
+      "non-float cannot have 'row'",
+      pcall_err(api.nvim_win_set_config, winid, { split = 'right', row = 10 })
+    )
+    eq(
+      "non-float cannot have 'col'",
+      pcall_err(api.nvim_win_set_config, winid, { split = 'right', col = 10 })
+    )
+    eq(
+      "non-float cannot have 'bufpos'",
+      pcall_err(api.nvim_win_set_config, winid, { split = 'right', bufpos = { 0, 0 } })
+    )
+  end)
+
   it('error message when reconfig missing relative field', function()
     local bufnr = api.nvim_create_buf(false, true)
     local opts = {
@@ -337,15 +366,16 @@ describe('float window', function()
       relative = 'editor',
       style = 'minimal',
     }
-    local win_id = api.nvim_open_win(bufnr, true, opts)
+    local winid = api.nvim_open_win(bufnr, true, opts)
     eq(
-    "Missing 'relative' field when reconfiguring floating window 1001",
-    pcall_err(api.nvim_win_set_config, win_id, {
-      width = 3,
-      height = 3,
-      row = 10,
-      col = 10,
-    }))
+      "Missing 'relative' field when reconfiguring floating window 1001",
+      pcall_err(api.nvim_win_set_config, winid, {
+        width = 3,
+        height = 3,
+        row = 10,
+        col = 10,
+      })
+    )
   end)
 
   it('is not operated on by windo when non-focusable #15374', function()
@@ -630,6 +660,22 @@ describe('float window', function()
     neq(external_win, api.nvim_get_current_win())
 
     screen:detach()
+  end)
+
+  it('no crash with relative="win" after %bdelete #30569', function()
+    exec([[
+      botright vsplit
+      %bdelete
+    ]])
+    api.nvim_open_win(0, false, {
+      relative = 'win',
+      win = 0,
+      row = 0,
+      col = 5,
+      width = 5,
+      height = 5,
+    })
+    assert_alive()
   end)
 
   describe('with only one tabpage,', function()
@@ -2485,6 +2531,37 @@ describe('float window', function()
       end
       eq({{"🦄", ""}, {"BB", {"B0", "B1", ""}}}, api.nvim_win_get_config(win).title)
       eq({{"🦄", ""}, {"BB", {"B0", "B1", ""}}}, api.nvim_win_get_config(win).footer)
+
+      -- making it a split should not leak memory
+      api.nvim_win_set_config(win, { vertical = true })
+      if multigrid then
+        screen:expect{grid=[[
+        ## grid 1
+          [4:--------------------]{5:│}[2:-------------------]|*5
+          {5:[No Name] [+]        }{4:[No Name]          }|
+          [3:----------------------------------------]|
+        ## grid 2
+          ^                   |
+          {0:~                  }|*4
+        ## grid 3
+                                                  |
+        ## grid 4
+           halloj!            |
+           BORDAA             |
+          {0:~                   }|*3
+        ]], win_viewport={
+          [2] = {win = 1000, topline = 0, botline = 2, curline = 0, curcol = 0, linecount = 1, sum_scroll_delta = 0};
+          [4] = {win = 1001, topline = 0, botline = 3, curline = 0, curcol = 0, linecount = 2, sum_scroll_delta = 0};
+        }}
+      else
+        screen:expect{grid=[[
+           halloj!            {5:│}^                   |
+           BORDAA             {5:│}{0:~                  }|
+          {0:~                   }{5:│}{0:~                  }|*3
+          {5:[No Name] [+]        }{4:[No Name]          }|
+                                                  |
+        ]]}
+      end
     end)
 
     it('terminates border on edge of viewport when window extends past viewport', function()
@@ -8991,6 +9068,7 @@ describe('float window', function()
     end)
 
     it('float window with hide option', function()
+      local cwin = api.nvim_get_current_win()
       local buf = api.nvim_create_buf(false,false)
       local win = api.nvim_open_win(buf, false, {relative='editor', width=10, height=2, row=2, col=5, hide = true})
       local expected_pos = {
@@ -9070,6 +9148,22 @@ describe('float window', function()
                                                   |
         ]])
       end
+      -- check window jump with hide
+      feed('<C-W><C-W>')
+      -- should keep on current window
+      eq(cwin, api.nvim_get_current_win())
+      api.nvim_win_set_config(win, {hide=false})
+      api.nvim_set_current_win(win)
+      local win3 = api.nvim_open_win(buf, true, {relative='editor', width=4, height=4, row=2, col=5, hide = false})
+      api.nvim_win_set_config(win, {hide=true})
+      feed('<C-W>w')
+      -- should goto the first window with prev
+      eq(cwin, api.nvim_get_current_win())
+      -- windo
+      command('windo set winheight=6')
+      eq(win3, api.nvim_get_current_win())
+      eq(6, api.nvim_win_get_height(win3))
+      eq(2, api.nvim_win_get_height(win))
     end)
 
     it(':fclose command #9663', function()

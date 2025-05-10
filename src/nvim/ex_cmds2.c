@@ -226,7 +226,7 @@ void dialog_changed(buf_T *buf, bool checkall)
 
     // restore to empty when write failed
     if (empty_bufname) {
-      XFREE_CLEAR(buf->b_fname);
+      buf->b_fname = NULL;
       XFREE_CLEAR(buf->b_ffname);
       XFREE_CLEAR(buf->b_sfname);
       unchanged(buf, true, false);
@@ -589,7 +589,7 @@ void ex_listdo(exarg_T *eap)
           break;
         }
         assert(wp);
-        execute = !wp->w_floating || wp->w_config.focusable;
+        execute = !wp->w_floating || (!wp->w_config.hide && wp->w_config.focusable);
         if (execute) {
           win_goto(wp);
           if (curwin != wp) {
