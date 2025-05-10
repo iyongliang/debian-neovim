@@ -945,6 +945,39 @@ describe('LSP', function()
       }
     end)
 
+    it('should forward ServerCancelled to callback', function()
+      local expected_handlers = {
+        { NIL, {}, { method = 'finish', client_id = 1 } },
+        {
+          { code = -32802 },
+          NIL,
+          { method = 'error_code_test', bufnr = 1, client_id = 1 },
+        },
+      }
+      local client --- @type vim.lsp.Client
+      test_rpc_server {
+        test_name = 'check_forward_server_cancelled',
+        on_init = function(_client)
+          _client.request('error_code_test')
+          client = _client
+        end,
+        on_exit = function(code, signal)
+          eq(0, code, 'exit code')
+          eq(0, signal, 'exit signal')
+          eq(0, #expected_handlers, 'did not call expected handler')
+        end,
+        on_handler = function(err, _, ctx)
+          eq(table.remove(expected_handlers), { err, _, ctx }, 'expected handler')
+          if ctx.method ~= 'finish' then
+            client.notify('finish')
+          end
+          if ctx.method == 'finish' then
+            client.stop()
+          end
+        end,
+      }
+    end)
+
     it('should forward ContentModified to callback', function()
       local expected_handlers = {
         { NIL, {}, { method = 'finish', client_id = 1 } },
@@ -964,7 +997,6 @@ describe('LSP', function()
         end,
         on_handler = function(err, _, ctx)
           eq(table.remove(expected_handlers), { err, _, ctx }, 'expected handler')
-          -- if ctx.method == 'error_code_test' then client.notify("finish") end
           if ctx.method ~= 'finish' then
             client.notify('finish')
           end
@@ -3324,6 +3356,19 @@ describe('LSP', function()
       eq({ 20, 3 }, exec_lua [[ return {vim.lsp.util._make_floating_popup_size(contents)} ]])
       command('set display+=uhex')
       eq({ 40, 3 }, exec_lua [[ return {vim.lsp.util._make_floating_popup_size(contents)} ]])
+    end)
+    it('handles empty line', function()
+      exec_lua([[
+        _G.contents = {
+          '',
+        }
+      ]])
+      eq(
+        { 20, 1 },
+        exec_lua([[
+          return { vim.lsp.util._make_floating_popup_size(_G.contents, { width = 20 }) }
+        ]])
+      )
     end)
   end)
 

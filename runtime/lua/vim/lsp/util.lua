@@ -155,25 +155,24 @@ end
 ---@param encoding string utf-8|utf-16|utf-32| defaults to utf-16
 ---@return integer byte (utf-8) index of `encoding` index `index` in `line`
 function M._str_byteindex_enc(line, index, encoding)
-  local len = #line
-  if index > len then
-    -- LSP spec: if character > line length, default to the line length.
-    -- https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#position
-    return len
-  end
+  -- LSP spec: if character > line length, default to the line length.
+  -- https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#position
+  local len8 = #line
   if not encoding then
     encoding = 'utf-16'
   end
   if encoding == 'utf-8' then
-    if index then
+    if index and index <= len8 then
       return index
     else
-      return len
+      return len8
     end
-  elseif encoding == 'utf-16' then
-    return vim.str_byteindex(line, index, true)
+  end
+  local len32, len16 = vim.str_utfindex(line)
+  if encoding == 'utf-16' then
+    return index <= len16 and vim.str_byteindex(line, index, true) or len8
   elseif encoding == 'utf-32' then
-    return vim.str_byteindex(line, index)
+    return index <= len32 and vim.str_byteindex(line, index) or len8
   else
     error('Invalid encoding: ' .. vim.inspect(encoding))
   end
@@ -1627,7 +1626,7 @@ function M._make_floating_popup_size(contents, opts)
       if vim.tbl_isempty(line_widths) then
         for _, line in ipairs(contents) do
           local line_width = vim.fn.strdisplaywidth(line:gsub('%z', '\n'))
-          height = height + math.ceil(line_width / wrap_at)
+          height = height + math.max(1, math.ceil(line_width / wrap_at))
         end
       else
         for i = 1, #contents do
@@ -2307,6 +2306,11 @@ function M._refresh(method, opts)
         local first = vim.fn.line('w0', window)
         local last = vim.fn.line('w$', window)
         for _, client in ipairs(clients) do
+          for rid, req in pairs(client.requests) do
+            if req.method == method and req.type == 'pending' and req.bufnr == bufnr then
+              client.cancel_request(rid)
+            end
+          end
           client.request(method, {
             textDocument = textDocument,
             range = make_line_range_params(bufnr, first - 1, last - 1, client.offset_encoding),

@@ -67,9 +67,9 @@ static TSLanguage *load_language(lua_State *L, const char *path, const char *lan
 {
   uv_lib_t lib;
   if (uv_dlopen(path, &lib)) {
+    xstrlcpy(IObuff, uv_dlerror(&lib), sizeof(IObuff));
     uv_dlclose(&lib);
-    luaL_error(L, "Failed to load parser for language '%s': uv_dlopen: %s",
-               lang_name, uv_dlerror(&lib));
+    luaL_error(L, "Failed to load parser for language '%s': uv_dlopen: %s", lang_name, IObuff);
   }
 
   char symbol_buf[128];
@@ -77,8 +77,9 @@ static TSLanguage *load_language(lua_State *L, const char *path, const char *lan
 
   TSLanguage *(*lang_parser)(void);
   if (uv_dlsym(&lib, symbol_buf, (void **)&lang_parser)) {
+    xstrlcpy(IObuff, uv_dlerror(&lib), sizeof(IObuff));
     uv_dlclose(&lib);
-    luaL_error(L, "Failed to load parser: uv_dlsym: %s", uv_dlerror(&lib));
+    luaL_error(L, "Failed to load parser: uv_dlsym: %s", IObuff);
   }
 
   TSLanguage *lang = lang_parser();
@@ -1390,10 +1391,25 @@ static void query_err_string(const char *src, int error_offset, TSQueryError err
       || error_type == TSQueryErrorField
       || error_type == TSQueryErrorCapture) {
     const char *suffix = src + error_offset;
+    bool is_anonymous = error_type == TSQueryErrorNodeType && suffix[-1] == '"';
     int suffix_len = 0;
     char c = suffix[suffix_len];
-    while (isalnum(c) || c == '_' || c == '-' || c == '.') {
-      c = suffix[++suffix_len];
+    if (is_anonymous) {
+      int backslashes = 0;
+      // Stop when we hit an unescaped double quote
+      while (c != '"' || backslashes % 2 != 0) {
+        if (c == '\\') {
+          backslashes += 1;
+        } else {
+          backslashes = 0;
+        }
+        c = suffix[++suffix_len];
+      }
+    } else {
+      // Stop when we hit the end of the identifier
+      while (isalnum(c) || c == '_' || c == '-' || c == '.') {
+        c = suffix[++suffix_len];
+      }
     }
     snprintf(err, errlen, "\"%.*s\":\n", suffix_len, suffix);
     offset = strlen(err);
