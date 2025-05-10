@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <limits.h>
-#include <msgpack/unpack.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -31,20 +30,20 @@
 #include "nvim/message.h"
 #include "nvim/msgpack_rpc/unpacker.h"
 #include "nvim/pos_defs.h"
+#include "nvim/runtime.h"
 #include "nvim/types_defs.h"
-#include "nvim/ui.h"
-#include "nvim/ui_defs.h"
-#include "nvim/version.h"
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
 # include "api/private/api_metadata.generated.h"
-# include "api/private/helpers.c.generated.h"
+# include "api/private/helpers.c.generated.h"  // IWYU pragma: keep
 #endif
 
 /// Start block that may cause Vimscript exceptions while evaluating another code
 ///
-/// Used when caller is supposed to be operating when other Vimscript code is being
-/// processed and that “other Vimscript code” must not be affected.
+/// Used just in case caller is supposed to be operating when other Vimscript code
+/// is being processed and that “other Vimscript code” must not be affected.
+///
+/// @warning Avoid calling directly; use TRY_WRAP instead.
 ///
 /// @param[out]  tstate  Location where try state should be saved.
 void try_enter(TryState *const tstate)
@@ -56,74 +55,33 @@ void try_enter(TryState *const tstate)
     .current_exception = current_exception,
     .msg_list = (const msglist_T *const *)msg_list,
     .private_msg_list = NULL,
-    .trylevel = trylevel,
     .got_int = got_int,
     .did_throw = did_throw,
     .need_rethrow = need_rethrow,
     .did_emsg = did_emsg,
   };
+  // `msg_list` controls the collection of abort-causing non-exception errors,
+  // which would otherwise be ignored.  This pattern is from do_cmdline().
   msg_list = &tstate->private_msg_list;
   current_exception = NULL;
-  trylevel = 1;
   got_int = false;
   did_throw = false;
   need_rethrow = false;
   did_emsg = false;
-}
-
-/// End try block, set the error message if any and restore previous state
-///
-/// @warning Return is consistent with most functions (false on error), not with
-///          try_end (true on error).
-///
-/// @param[in]  tstate  Previous state to restore.
-/// @param[out]  err  Location where error should be saved.
-///
-/// @return false if error occurred, true otherwise.
-bool try_leave(const TryState *const tstate, Error *const err)
-  FUNC_ATTR_NONNULL_ALL FUNC_ATTR_WARN_UNUSED_RESULT
-{
-  const bool ret = !try_end(err);
-  assert(trylevel == 0);
-  assert(!need_rethrow);
-  assert(!got_int);
-  assert(!did_throw);
-  assert(!did_emsg);
-  assert(msg_list == &tstate->private_msg_list);
-  assert(*msg_list == NULL);
-  assert(current_exception == NULL);
-  msg_list = (msglist_T **)tstate->msg_list;
-  current_exception = tstate->current_exception;
-  trylevel = tstate->trylevel;
-  got_int = tstate->got_int;
-  did_throw = tstate->did_throw;
-  need_rethrow = tstate->need_rethrow;
-  did_emsg = tstate->did_emsg;
-  return ret;
-}
-
-/// Start block that may cause vimscript exceptions
-///
-/// Each try_start() call should be mirrored by try_end() call.
-///
-/// To be used as a replacement of `:try … catch … endtry` in C code, in cases
-/// when error flag could not already be set. If there may be pending error
-/// state at the time try_start() is executed which needs to be preserved,
-/// try_enter()/try_leave() pair should be used instead.
-void try_start(void)
-{
   trylevel++;
 }
 
-/// End try block, set the error message if any and return true if an error
-/// occurred.
+/// Ends a `try_enter` block; sets error message if any.
 ///
-/// @param err Pointer to the stack-allocated error object
-/// @return true if an error occurred
-bool try_end(Error *err)
+/// @warning Avoid calling directly; use TRY_WRAP instead.
+///
+/// @param[out] err Pointer to the stack-allocated error object
+void try_leave(const TryState *const tstate, Error *const err)
+  FUNC_ATTR_NONNULL_ALL
 {
   // Note: all globals manipulated here should be saved/restored in
   // try_enter/try_leave.
+  assert(trylevel > 0);
   trylevel--;
 
   // Set by emsg(), affects aborting().  See also enter_cleanup().
@@ -166,7 +124,13 @@ bool try_end(Error *err)
     discard_current_exception();
   }
 
-  return ERROR_SET(err);
+  // Restore the exception context.
+  msg_list = (msglist_T **)tstate->msg_list;
+  current_exception = tstate->current_exception;
+  got_int = tstate->got_int;
+  did_throw = tstate->did_throw;
+  need_rethrow = tstate->need_rethrow;
+  did_emsg = tstate->did_emsg;
 }
 
 /// Recursively expands a vimscript value in a dict
@@ -199,7 +163,7 @@ dictitem_T *dict_check_writable(dict_T *dict, String key, bool del, Error *err)
       api_set_error(err, kErrorTypeException, "Key is fixed: %s", key.data);
     }
   } else if (dict->dv_lock) {
-    api_set_error(err, kErrorTypeException, "Dictionary is locked");
+    api_set_error(err, kErrorTypeException, "Dict is locked");
   } else if (key.size == 0) {
     api_set_error(err, kErrorTypeValidation, "Key name is empty");
   } else if (key.size > INT_MAX) {
@@ -508,7 +472,7 @@ int64_t normalize_index(buf_T *buf, int64_t index, bool end_exclusive, bool *oob
 
 /// Returns a substring of a buffer line
 ///
-/// @param buf          Buffer handle
+/// @param buf          Buffer id
 /// @param lnum         Line number (1-based)
 /// @param start_col    Starting byte offset into line (0-based)
 /// @param end_col      Ending byte offset into line (0-based, exclusive)
@@ -542,10 +506,6 @@ String buf_get_text(buf_T *buf, int64_t lnum, int64_t start_col, int64_t end_col
 
 void api_free_string(String value)
 {
-  if (!value.data) {
-    return;
-  }
-
   xfree(value.data);
 }
 
@@ -556,9 +516,9 @@ Array arena_array(Arena *arena, size_t max_size)
   return arr;
 }
 
-Dictionary arena_dict(Arena *arena, size_t max_size)
+Dict arena_dict(Arena *arena, size_t max_size)
 {
-  Dictionary dict = ARRAY_DICT_INIT;
+  Dict dict = ARRAY_DICT_INIT;
   kv_fixsize_arena(arena, dict, max_size);
   return dict;
 }
@@ -601,8 +561,8 @@ void api_free_object(Object value)
     api_free_array(value.data.array);
     break;
 
-  case kObjectTypeDictionary:
-    api_free_dictionary(value.data.dictionary);
+  case kObjectTypeDict:
+    api_free_dict(value.data.dict);
     break;
 
   case kObjectTypeLuaRef:
@@ -620,7 +580,7 @@ void api_free_array(Array value)
   xfree(value.items);
 }
 
-void api_free_dictionary(Dictionary value)
+void api_free_dict(Dict value)
 {
   for (size_t i = 0; i < value.size; i++) {
     api_free_string(value.items[i].key);
@@ -653,7 +613,7 @@ Object api_metadata(void)
     Arena arena = ARENA_EMPTY;
     Error err = ERROR_INIT;
     metadata = unpack((char *)packed_api_metadata, sizeof(packed_api_metadata), &arena, &err);
-    if (ERROR_SET(&err) || metadata.type != kObjectTypeDictionary) {
+    if (ERROR_SET(&err) || metadata.type != kObjectTypeDict) {
       abort();
     }
     mem_for_metadata = arena_finish(&arena);
@@ -689,9 +649,9 @@ Array copy_array(Array array, Arena *arena)
   return rv;
 }
 
-Dictionary copy_dictionary(Dictionary dict, Arena *arena)
+Dict copy_dict(Dict dict, Arena *arena)
 {
-  Dictionary rv = arena_dict(arena, dict.size);
+  Dict rv = arena_dict(arena, dict.size);
   for (size_t i = 0; i < dict.size; i++) {
     KeyValuePair item = dict.items[i];
     PUT_C(rv, copy_string(item.key, arena).data, copy_object(item.value, arena));
@@ -718,8 +678,8 @@ Object copy_object(Object obj, Arena *arena)
   case kObjectTypeArray:
     return ARRAY_OBJ(copy_array(obj.data.array, arena));
 
-  case kObjectTypeDictionary:
-    return DICTIONARY_OBJ(copy_dictionary(obj.data.dictionary, arena));
+  case kObjectTypeDict:
+    return DICT_OBJ(copy_dict(obj.data.dict, arena));
 
   case kObjectTypeLuaRef:
     return LUAREF_OBJ(api_new_luaref(obj.data.luaref));
@@ -773,9 +733,10 @@ int object_to_hl_id(Object obj, const char *what, Error *err)
     String str = obj.data.string;
     return str.size ? syn_check_group(str.data, str.size) : 0;
   } else if (obj.type == kObjectTypeInteger) {
-    return MAX((int)obj.data.integer, 0);
+    int id = (int)obj.data.integer;
+    return (1 <= id && id <= highlight_num_groups()) ? id : 0;
   } else {
-    api_set_error(err, kErrorTypeValidation, "Invalid highlight: %s", what);
+    api_set_error(err, kErrorTypeValidation, "Invalid hl_group: %s", what);
     return 0;
   }
 }
@@ -795,7 +756,7 @@ char *api_typename(ObjectType t)
     return "String";
   case kObjectTypeArray:
     return "Array";
-  case kObjectTypeDictionary:
+  case kObjectTypeDict:
     return "Dict";
   case kObjectTypeLuaRef:
     return "Function";
@@ -809,35 +770,26 @@ char *api_typename(ObjectType t)
   UNREACHABLE;
 }
 
-HlMessage parse_hl_msg(Array chunks, Error *err)
+HlMessage parse_hl_msg(Array chunks, bool is_err, Error *err)
 {
   HlMessage hl_msg = KV_INITIAL_VALUE;
   for (size_t i = 0; i < chunks.size; i++) {
-    if (chunks.items[i].type != kObjectTypeArray) {
-      api_set_error(err, kErrorTypeValidation, "Chunk is not an array");
+    VALIDATE_T("chunk", kObjectTypeArray, chunks.items[i].type, {
       goto free_exit;
-    }
+    });
     Array chunk = chunks.items[i].data.array;
-    if (chunk.size == 0 || chunk.size > 2
-        || chunk.items[0].type != kObjectTypeString
-        || (chunk.size == 2 && chunk.items[1].type != kObjectTypeString)) {
-      api_set_error(err, kErrorTypeValidation,
-                    "Chunk is not an array with one or two strings");
+    VALIDATE((chunk.size > 0 && chunk.size <= 2 && chunk.items[0].type == kObjectTypeString),
+             "%s", "Invalid chunk: expected Array with 1 or 2 Strings", {
       goto free_exit;
-    }
+    });
 
     String str = copy_string(chunk.items[0].data.string, NULL);
 
-    int attr = 0;
+    int hl_id = is_err ? HLF_E : 0;
     if (chunk.size == 2) {
-      String hl = chunk.items[1].data.string;
-      if (hl.size > 0) {
-        // TODO(bfredl): use object_to_hl_id and allow integer
-        int hl_id = syn_check_group(hl.data, hl.size);
-        attr = hl_id > 0 ? syn_id2attr(hl_id) : 0;
-      }
+      hl_id = object_to_hl_id(chunk.items[1], "text highlight", err);
     }
-    kv_push(hl_msg, ((HlMessageChunk){ .text = str, .attr = attr }));
+    kv_push(hl_msg, ((HlMessageChunk){ .text = str, .hl_id = hl_id }));
   }
 
   return hl_msg;
@@ -848,7 +800,7 @@ free_exit:
 }
 
 // see also nlua_pop_keydict for the lua specific implementation
-bool api_dict_to_keydict(void *retval, FieldHashfn hashy, Dictionary dict, Error *err)
+bool api_dict_to_keydict(void *retval, FieldHashfn hashy, Dict dict, Error *err)
 {
   for (size_t i = 0; i < dict.size; i++) {
     String k = dict.items[i].key;
@@ -912,23 +864,25 @@ bool api_dict_to_keydict(void *retval, FieldHashfn hashy, Dictionary dict, Error
         return false;
       });
       *(Array *)mem = value->data.array;
-    } else if (field->type == kObjectTypeDictionary) {
-      Dictionary *val = (Dictionary *)mem;
+    } else if (field->type == kObjectTypeDict) {
+      Dict *val = (Dict *)mem;
       // allow empty array as empty dict for lua (directly or via lua-client RPC)
       if (value->type == kObjectTypeArray && value->data.array.size == 0) {
-        *val = (Dictionary)ARRAY_DICT_INIT;
-      } else if (value->type == kObjectTypeDictionary) {
-        *val = value->data.dictionary;
+        *val = (Dict)ARRAY_DICT_INIT;
+      } else if (value->type == kObjectTypeDict) {
+        *val = value->data.dict;
       } else {
-        api_err_exp(err, field->str, api_typename(field->type), api_typename(value->type));
+        api_err_exp(err, field->str, api_typename((ObjectType)field->type),
+                    api_typename(value->type));
         return false;
       }
     } else if (field->type == kObjectTypeBuffer || field->type == kObjectTypeWindow
                || field->type == kObjectTypeTabpage) {
-      if (value->type == kObjectTypeInteger || value->type == field->type) {
+      if (value->type == kObjectTypeInteger || value->type == (ObjectType)field->type) {
         *(handle_T *)mem = (handle_T)value->data.integer;
       } else {
-        api_err_exp(err, field->str, api_typename(field->type), api_typename(value->type));
+        api_err_exp(err, field->str, api_typename((ObjectType)field->type),
+                    api_typename(value->type));
         return false;
       }
     } else if (field->type == kObjectTypeLuaRef) {
@@ -943,9 +897,9 @@ bool api_dict_to_keydict(void *retval, FieldHashfn hashy, Dictionary dict, Error
   return true;
 }
 
-Dictionary api_keydict_to_dict(void *value, KeySetLink *table, size_t max_size, Arena *arena)
+Dict api_keydict_to_dict(void *value, KeySetLink *table, size_t max_size, Arena *arena)
 {
-  Dictionary rv = arena_dict(arena, max_size);
+  Dict rv = arena_dict(arena, max_size);
   for (size_t i = 0; table[i].str; i++) {
     KeySetLink *field = &table[i];
     bool is_set = true;
@@ -973,12 +927,12 @@ Dictionary api_keydict_to_dict(void *value, KeySetLink *table, size_t max_size, 
       val = STRING_OBJ(*(String *)mem);
     } else if (field->type == kObjectTypeArray) {
       val = ARRAY_OBJ(*(Array *)mem);
-    } else if (field->type == kObjectTypeDictionary) {
-      val = DICTIONARY_OBJ(*(Dictionary *)mem);
+    } else if (field->type == kObjectTypeDict) {
+      val = DICT_OBJ(*(Dict *)mem);
     } else if (field->type == kObjectTypeBuffer || field->type == kObjectTypeWindow
                || field->type == kObjectTypeTabpage) {
       val.data.integer = *(handle_T *)mem;
-      val.type = field->type;
+      val.type = (ObjectType)field->type;
     } else if (field->type == kObjectTypeLuaRef) {
       // do nothing
     } else {
@@ -1004,8 +958,8 @@ void api_luarefs_free_object(Object value)
     api_luarefs_free_array(value.data.array);
     break;
 
-  case kObjectTypeDictionary:
-    api_luarefs_free_dict(value.data.dictionary);
+  case kObjectTypeDict:
+    api_luarefs_free_dict(value.data.dict);
     break;
 
   default:
@@ -1021,8 +975,8 @@ void api_luarefs_free_keydict(void *dict, KeySetLink *table)
       api_luarefs_free_object(*(Object *)mem);
     } else if (table[i].type == kObjectTypeLuaRef) {
       api_free_luaref(*(LuaRef *)mem);
-    } else if (table[i].type == kObjectTypeDictionary) {
-      api_luarefs_free_dict(*(Dictionary *)mem);
+    } else if (table[i].type == kObjectTypeDict) {
+      api_luarefs_free_dict(*(Dict *)mem);
     }
   }
 }
@@ -1034,7 +988,7 @@ void api_luarefs_free_array(Array value)
   }
 }
 
-void api_luarefs_free_dict(Dictionary value)
+void api_luarefs_free_dict(Dict value)
 {
   for (size_t i = 0; i < value.size; i++) {
     api_luarefs_free_object(value.items[i].value);
@@ -1096,32 +1050,26 @@ const char *get_default_stl_hl(win_T *wp, bool use_winbar, int stc_hl_id)
   }
 }
 
-int find_sid(uint64_t channel_id)
-{
-  switch (channel_id) {
-  case VIML_INTERNAL_CALL:
-  // TODO(autocmd): Figure out what this should be
-  // return SID_API_CLIENT;
-  case LUA_INTERNAL_CALL:
-    return SID_LUA;
-  default:
-    return SID_API_CLIENT;
-  }
-}
-
 /// Sets sctx for API calls.
 ///
-/// @param channel_id     api clients id. Used to determine if it's a internal
-///                       call or a rpc call.
-/// @return returns       previous value of current_sctx. To be used
-///                       to be used for restoring sctx to previous state.
+/// @param channel_id  api client id to determine if it's a internal or RPC call.
+///
+/// @return  previous value of current_sctx. To be used later for restoring sctx.
 sctx_T api_set_sctx(uint64_t channel_id)
 {
   sctx_T old_current_sctx = current_sctx;
+  // The script context is already properly set when calling an API from Vimscript.
   if (channel_id != VIML_INTERNAL_CALL) {
-    current_sctx.sc_sid =
-      channel_id == LUA_INTERNAL_CALL ? SID_LUA : SID_API_CLIENT;
     current_sctx.sc_lnum = 0;
+    if (channel_id == LUA_INTERNAL_CALL) {
+      // When the current script is a Lua script, don't override sc_sid.
+      if (!script_is_lua(current_sctx.sc_sid)) {
+        current_sctx.sc_sid = SID_LUA;
+      }
+    } else {
+      current_sctx.sc_sid = SID_API_CLIENT;
+      current_sctx.sc_chan = channel_id;
+    }
   }
   return old_current_sctx;
 }

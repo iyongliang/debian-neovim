@@ -24,7 +24,6 @@ end
 before_each(function()
   clear()
   screen = Screen.new(40, 8)
-  screen:attach()
   source([[
     highlight RBP1 guibg=Red
     highlight RBP2 guibg=Yellow
@@ -478,7 +477,7 @@ describe('Command-line coloring', function()
       :++^                                     |
     ]])
   end)
-  it('does not error out when called from a errorred out cycle', function()
+  it('does not error out when called from a errored out cycle', function()
     set_color_cb('ReturningGlobal', { { 0, 1, 'Normal' } })
     feed(dedent([[
       :set regexpengine=2
@@ -629,7 +628,7 @@ describe('Ex commands coloring', function()
     local msg = 'E5405: Chunk 0 start 10 splits multibyte character'
     eq('\n' .. msg, fn.execute('messages'))
   end)
-  it('does not error out when called from a errorred out cycle', function()
+  it('does not error out when called from a errored out cycle', function()
     -- Apparently when there is a cycle in which one of the commands errors out
     -- this error may be caught by color_cmdline before it is presented to the
     -- user.

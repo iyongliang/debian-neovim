@@ -168,12 +168,6 @@ func Test_very_large_count()
 endfunc
 
 func Test_very_large_count_64bit()
-  throw 'Skipped: v:sizeoflong is N/A'  " use legacy/put_spec.lua instead
-
-  if v:sizeoflong < 8
-    throw 'Skipped: only works with 64 bit long ints'
-  endif
-
   new
   let @" = repeat('x', 100)
   call assert_fails('norm 999999999p', 'E1240:')
@@ -190,12 +184,6 @@ func Test_very_large_count_block()
 endfunc
 
 func Test_very_large_count_block_64bit()
-  throw 'Skipped: v:sizeoflong is N/A'  " use legacy/put_spec.lua instead
-
-  if v:sizeoflong < 8
-    throw 'Skipped: only works with 64 bit long ints'
-  endif
-
   new
   call setline(1, repeat('x', 100))
   exe "norm \<C-V>$y"
@@ -338,6 +326,33 @@ func Test_put_list()
   put! =l
   call assert_equal(['a', 'b', 'c', ''], getline(1, '$'))
   bw!
+endfunc
+
+" Test pasting the '.' register
+func Test_put_inserted()
+  new
+
+  for s in ['', '…', '0', '^', '+0', '+^', '…0', '…^']
+    call setline(1, 'foobar')
+    exe $"normal! A{s}\<Esc>"
+    call assert_equal($'foobar{s}', getline(1))
+    normal! ".p
+    call assert_equal($'foobar{s}{s}', getline(1))
+    normal! ".2p
+    call assert_equal($'foobar{s}{s}{s}{s}', getline(1))
+  endfor
+
+  for s in ['0', '^', '+0', '+^', '…0', '…^']
+    call setline(1, "\t\t\t\t\tfoobar")
+    exe $"normal! A\<C-D>{s}\<Esc>"
+    call assert_equal($"\t\t\t\tfoobar{s}", getline(1))
+    normal! ".p
+    call assert_equal($"\t\t\tfoobar{s}{s}", getline(1))
+    normal! ".2p
+    call assert_equal($"\tfoobar{s}{s}{s}{s}", getline(1))
+  endfor
+
+  bwipe!
 endfunc
 
 " vim: shiftwidth=2 sts=2 expandtab

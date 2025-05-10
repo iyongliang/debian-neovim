@@ -54,12 +54,12 @@
 /// must not be used during iteration!
 void extmark_set(buf_T *buf, uint32_t ns_id, uint32_t *idp, int row, colnr_T col, int end_row,
                  colnr_T end_col, DecorInline decor, uint16_t decor_flags, bool right_gravity,
-                 bool end_right_gravity, bool no_undo, bool invalidate, bool scoped, Error *err)
+                 bool end_right_gravity, bool no_undo, bool invalidate, Error *err)
 {
   uint32_t *ns = map_put_ref(uint32_t, uint32_t)(buf->b_extmark_ns, ns_id, NULL, NULL);
   uint32_t id = idp ? *idp : 0;
 
-  uint16_t flags = mt_flags(right_gravity, no_undo, invalidate, decor.ext, scoped) | decor_flags;
+  uint16_t flags = mt_flags(right_gravity, no_undo, invalidate, decor.ext) | decor_flags;
   if (id == 0) {
     id = ++*ns;
   } else {
@@ -95,6 +95,7 @@ void extmark_set(buf_T *buf, uint32_t ns_id, uint32_t *idp, int row, colnr_T col
   MTKey mark = { { row, col }, ns_id, id, flags, decor.data };
 
   marktree_put(buf->b_marktree, mark, end_row, end_col, end_right_gravity);
+  decor_state_invalidate(buf);
 
 revised:
   if (decor_flags || decor.ext) {
@@ -134,7 +135,7 @@ static void extmark_setraw(buf_T *buf, uint64_t mark, int row, colnr_T col, bool
   } else if (!mt_invalid(key) && key.flags & MT_FLAG_DECOR_SIGNTEXT && buf->b_signcols.autom) {
     row1 = MIN(alt.pos.row, MIN(key.pos.row, row));
     row2 = MAX(alt.pos.row, MAX(key.pos.row, row));
-    buf_signcols_count_range(buf, row1, row2, 0, kTrue);
+    buf_signcols_count_range(buf, row1, MIN(curbuf->b_ml.ml_line_count - 1, row2), 0, kTrue);
   }
 
   if (move) {
@@ -144,7 +145,7 @@ static void extmark_setraw(buf_T *buf, uint64_t mark, int row, colnr_T col, bool
   if (invalid) {
     buf_put_decor(buf, mt_decor(key), MIN(row, key.pos.row), MAX(row, key.pos.row));
   } else if (!mt_invalid(key) && key.flags & MT_FLAG_DECOR_SIGNTEXT && buf->b_signcols.autom) {
-    buf_signcols_count_range(buf, row1, row2, 0, kNone);
+    buf_signcols_count_range(buf, row1, MIN(curbuf->b_ml.ml_line_count - 1, row2), 0, kNone);
   }
 }
 
@@ -182,9 +183,16 @@ void extmark_del(buf_T *buf, MarkTreeIter *itr, MTKey key, bool restore)
     if (mt_invalid(key)) {
       decor_free(mt_decor(key));
     } else {
+      if (mt_end(key)) {
+        MTKey k = key;
+        key = key2;
+        key2 = k;
+      }
       buf_decor_remove(buf, key.pos.row, key2.pos.row, key.pos.col, mt_decor(key), true);
     }
   }
+
+  decor_state_invalidate(buf);
 
   // TODO(bfredl): delete it from current undo header, opportunistically?
 }
@@ -237,6 +245,10 @@ bool extmark_clear(buf_T *buf, uint32_t ns_id, int l_row, colnr_T l_col, int u_r
     } else {
       map_del(uint32_t, uint32_t)(buf->b_extmark_ns, ns_id, NULL);
     }
+  }
+
+  if (marks_cleared_any) {
+    decor_state_invalidate(buf);
   }
 
   return marks_cleared_any;
@@ -568,7 +580,8 @@ void extmark_splice_impl(buf_T *buf, int start_row, colnr_T start_col, bcount_t 
 
   // Remove signs inside edited region from "b_signcols.count", add after splicing.
   if (old_row > 0 || new_row > 0) {
-    buf_signcols_count_range(buf, start_row, start_row + old_row, 0, kTrue);
+    int row2 = MIN(buf->b_ml.ml_line_count - (new_row - old_row) - 1, start_row + old_row);
+    buf_signcols_count_range(buf, start_row, row2, 0, kTrue);
   }
 
   marktree_splice(buf->b_marktree, (int32_t)start_row, start_col,
@@ -576,7 +589,8 @@ void extmark_splice_impl(buf_T *buf, int start_row, colnr_T start_col, bcount_t 
                   new_row, new_col);
 
   if (old_row > 0 || new_row > 0) {
-    buf_signcols_count_range(buf, start_row, start_row + new_row, 0, kNone);
+    int row2 = MIN(buf->b_ml.ml_line_count - 1, start_row + new_row);
+    buf_signcols_count_range(buf, start_row, row2, 0, kNone);
   }
 
   if (undo == kExtmarkUndo) {

@@ -1,3 +1,5 @@
+---@diagnostic disable: no-unknown
+
 local t = require('test.testutil')
 local n = require('test.functional.testnvim')()
 
@@ -16,11 +18,20 @@ local retry = t.retry
 describe('vim.snippet', function()
   before_each(function()
     clear()
+    exec_lua(function()
+      local function set_snippet_jump(direction, key)
+        vim.keymap.set({ 'i', 's' }, key, function()
+          if vim.snippet.active({ direction = direction }) then
+            return string.format('<Cmd>lua vim.snippet.jump(%d)<CR>', direction)
+          else
+            return key
+          end
+        end, { silent = true, expr = true })
+      end
 
-    exec_lua([[
-      vim.keymap.set({ 'i', 's' }, '<Tab>', function() vim.snippet.jump(1) end, { buffer = true })
-      vim.keymap.set({ 'i', 's' }, '<S-Tab>', function() vim.snippet.jump(-1) end, { buffer = true })
-    ]])
+      set_snippet_jump(1, '<Tab>')
+      set_snippet_jump(-1, '<S-Tab>')
+    end)
   end)
   after_each(clear)
 
@@ -68,6 +79,10 @@ describe('vim.snippet', function()
     -- Regression test: #29658
     api.nvim_buf_set_lines(curbuf, 0, -1, false, {})
     test_expand_success({ '${1:foo^bar}\n' }, { 'foo^bar', '' })
+
+    -- Regression test: #30950
+    api.nvim_buf_set_lines(curbuf, 0, -1, false, {})
+    test_expand_success({ 'a^ b$1', 'b$2', 'd' }, { 'a^ b', 'b', 'd' })
   end)
 
   it('replaces tabs with spaces when expandtab is set', function()

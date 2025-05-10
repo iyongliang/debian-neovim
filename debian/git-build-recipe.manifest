@@ -1,4 +1,0 @@
-# git-build-recipe format 0.4 deb-version 0.10.0~ubuntu1+git202401272103-2cd76a758-971e32c87-6850187d2
-lp:~neovim-ppa/neovim-ppa/+git/neovim-git git-commit:2cd76a758b4511748d9482e5af58162a608516b4
-merge packaging lp:neovim-ppa git-commit:971e32c8787f4026cde949fa77a195ce6263f69a
-nest-part deps lp:~neovim-ppa/neovim-ppa/+git/neovim-deps-git src deps-src git-commit:6850187d2351ddbb020dd09969f1adf067ac9f92

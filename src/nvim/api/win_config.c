@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -7,24 +8,22 @@
 #include "nvim/api/private/defs.h"
 #include "nvim/api/private/dispatch.h"
 #include "nvim/api/private/helpers.h"
-#include "nvim/api/tabpage.h"
 #include "nvim/api/win_config.h"
 #include "nvim/ascii_defs.h"
 #include "nvim/autocmd.h"
 #include "nvim/autocmd_defs.h"
 #include "nvim/buffer.h"
 #include "nvim/buffer_defs.h"
-#include "nvim/decoration.h"
 #include "nvim/decoration_defs.h"
 #include "nvim/drawscreen.h"
+#include "nvim/errors.h"
 #include "nvim/eval/window.h"
-#include "nvim/extmark_defs.h"
 #include "nvim/globals.h"
-#include "nvim/grid_defs.h"
 #include "nvim/highlight_group.h"
 #include "nvim/macros_defs.h"
 #include "nvim/mbyte.h"
 #include "nvim/memory.h"
+#include "nvim/memory_defs.h"
 #include "nvim/option.h"
 #include "nvim/option_vars.h"
 #include "nvim/pos_defs.h"
@@ -32,7 +31,6 @@
 #include "nvim/syntax.h"
 #include "nvim/types_defs.h"
 #include "nvim/ui.h"
-#include "nvim/ui_compositor.h"
 #include "nvim/ui_defs.h"
 #include "nvim/vim_defs.h"
 #include "nvim/window.h"
@@ -103,10 +101,12 @@
 /// @param config Map defining the window configuration. Keys:
 ///   - relative: Sets the window layout to "floating", placed at (row,col)
 ///                 coordinates relative to:
-///      - "editor" The global editor grid
-///      - "win"    Window given by the `win` field, or current window.
-///      - "cursor" Cursor position in current window.
-///      - "mouse"  Mouse position
+///      - "cursor"     Cursor position in current window.
+///      - "editor"     The global editor grid.
+///      - "laststatus" 'laststatus' if present, or last row.
+///      - "mouse"      Mouse position.
+///      - "tabline"    Tabline if present, or first row.
+///      - "win"        Window given by the `win` field, or current window.
 ///   - win: |window-ID| window to split, or relative window when creating a
 ///      float (relative="win").
 ///   - anchor: Decides which corner of the float to place at (row,col):
@@ -128,7 +128,12 @@
 ///            fractional.
 ///   - focusable: Enable focus by user actions (wincmds, mouse events).
 ///       Defaults to true. Non-focusable windows can be entered by
-///       |nvim_set_current_win()|.
+///       |nvim_set_current_win()|, or, when the `mouse` field is set to true,
+///       by mouse events. See |focusable|.
+///   - mouse: Specify how this window interacts with mouse events.
+///       Defaults to `focusable` value.
+///       - If false, mouse events pass through this window.
+///       - If true, mouse events interact with this window normally.
 ///   - external: GUI should display the window as an external
 ///       top-level window. Currently accepts no other positioning
 ///       configuration together with this.
@@ -154,17 +159,11 @@
 ///                    'fillchars' to a space char, and clearing the
 ///                    |hl-EndOfBuffer| region in 'winhighlight'.
 ///   - border: Style of (optional) window border. This can either be a string
-///     or an array. The string values are
-///     - "none": No border (default).
-///     - "single": A single line box.
-///     - "double": A double line box.
-///     - "rounded": Like "single", but with rounded corners ("╭" etc.).
-///     - "solid": Adds padding by a single whitespace cell.
-///     - "shadow": A drop shadow effect by blending with the background.
-///     - If it is an array, it should have a length of eight or any divisor of
-///       eight. The array will specify the eight chars building up the border
-///       in a clockwise fashion starting with the top-left corner. As an
-///       example, the double box style could be specified as:
+///     or an array. The string values are the same as those described in 'winborder'.
+///     If it is an array, it should have a length of eight or any divisor of
+///     eight. The array will specify the eight chars building up the border
+///     in a clockwise fashion starting with the top-left corner. As an
+///     example, the double box style could be specified as:
 ///       ```
 ///       [ "╔", "═" ,"╗", "║", "╝", "═", "╚", "║" ].
 ///       ```
@@ -189,13 +188,13 @@
 ///     ```
 ///   - title: Title (optional) in window border, string or list.
 ///     List should consist of `[text, highlight]` tuples.
-///     If string, the default highlight group is `FloatTitle`.
+///     If string, or a tuple lacks a highlight, the default highlight group is `FloatTitle`.
 ///   - title_pos: Title position. Must be set with `title` option.
 ///     Value can be one of "left", "center", or "right".
 ///     Default is `"left"`.
 ///   - footer: Footer (optional) in window border, string or list.
 ///     List should consist of `[text, highlight]` tuples.
-///     If string, the default highlight group is `FloatFooter`.
+///     If string, or a tuple lacks a highlight, the default highlight group is `FloatFooter`.
 ///   - footer_pos: Footer position. Must be set with `footer` option.
 ///     Value can be one of "left", "center", or "right".
 ///     Default is `"left"`.
@@ -209,7 +208,7 @@
 ///
 /// @param[out] err Error details, if any
 ///
-/// @return Window handle, or 0 on error
+/// @return |window-ID|, or 0 on error
 Window nvim_open_win(Buffer buffer, Boolean enter, Dict(win_config) *config, Error *err)
   FUNC_API_SINCE(6) FUNC_API_TEXTLOCK_ALLOW_CMDWIN
 {
@@ -382,7 +381,7 @@ static int win_split_flags(WinSplit split, bool toplevel)
 ///
 /// @see |nvim_open_win()|
 ///
-/// @param      window  Window handle, or 0 for current window
+/// @param      window  |window-ID|, or 0 for current window
 /// @param      config  Map defining the window configuration,
 ///                     see |nvim_open_win()|
 /// @param[out] err     Error details, if any
@@ -689,14 +688,16 @@ static void config_put_bordertext(Dict(win_config) *config, WinConfig *fconfig,
 ///
 /// `relative` is empty for normal windows.
 ///
-/// @param      window Window handle, or 0 for current window
+/// @param      window |window-ID|, or 0 for current window
 /// @param[out] err Error details, if any
 /// @return     Map defining the window configuration, see |nvim_open_win()|
 Dict(win_config) nvim_win_get_config(Window window, Arena *arena, Error *err)
   FUNC_API_SINCE(6)
 {
   /// Keep in sync with FloatRelative in buffer_defs.h
-  static const char *const float_relative_str[] = { "editor", "win", "cursor", "mouse" };
+  static const char *const float_relative_str[] = {
+    "editor", "win", "cursor", "mouse", "tabline", "laststatus"
+  };
 
   /// Keep in sync with WinSplit in buffer_defs.h
   static const char *const win_split_str[] = { "left", "right", "above", "below" };
@@ -713,6 +714,7 @@ Dict(win_config) nvim_win_get_config(Window window, Arena *arena, Error *err)
   PUT_KEY_X(rv, focusable, config->focusable);
   PUT_KEY_X(rv, external, config->external);
   PUT_KEY_X(rv, hide, config->hide);
+  PUT_KEY_X(rv, mouse, config->mouse);
 
   if (wp->w_floating) {
     PUT_KEY_X(rv, width, config->width);
@@ -801,6 +803,10 @@ static bool parse_float_relative(String relative, FloatRelative *out)
     *out = kFloatRelativeCursor;
   } else if (striequal(str, "mouse")) {
     *out = kFloatRelativeMouse;
+  } else if (striequal(str, "tabline")) {
+    *out = kFloatRelativeTabline;
+  } else if (striequal(str, "laststatus")) {
+    *out = kFloatRelativeLaststatus;
   } else {
     return false;
   }
@@ -851,19 +857,16 @@ static void parse_bordertext(Object bordertext, BorderTextType bordertext_type, 
   bool *is_present;
   VirtText *chunks;
   int *width;
-  int default_hl_id;
   switch (bordertext_type) {
   case kBorderTextTitle:
     is_present = &fconfig->title;
     chunks = &fconfig->title_chunks;
     width = &fconfig->title_width;
-    default_hl_id = syn_check_group(S_LEN("FloatTitle"));
     break;
   case kBorderTextFooter:
     is_present = &fconfig->footer;
     chunks = &fconfig->footer_chunks;
     width = &fconfig->footer_width;
-    default_hl_id = syn_check_group(S_LEN("FloatFooter"));
     break;
   }
 
@@ -874,7 +877,7 @@ static void parse_bordertext(Object bordertext, BorderTextType bordertext_type, 
     }
     kv_init(*chunks);
     kv_push(*chunks, ((VirtTextChunk){ .text = xstrdup(bordertext.data.string.data),
-                                       .hl_id = default_hl_id }));
+                                       .hl_id = -1 }));
     *width = (int)mb_string2cells(bordertext.data.string.data);
     *is_present = true;
     return;
@@ -886,7 +889,7 @@ static void parse_bordertext(Object bordertext, BorderTextType bordertext_type, 
   *is_present = true;
 }
 
-static bool parse_bordertext_pos(String bordertext_pos, BorderTextType bordertext_type,
+static bool parse_bordertext_pos(win_T *wp, String bordertext_pos, BorderTextType bordertext_type,
                                  WinConfig *fconfig, Error *err)
 {
   AlignTextPos *align;
@@ -900,7 +903,9 @@ static bool parse_bordertext_pos(String bordertext_pos, BorderTextType bordertex
   }
 
   if (bordertext_pos.size == 0) {
-    *align = kAlignLeft;
+    if (!wp) {
+      *align = kAlignLeft;
+    }
     return true;
   }
 
@@ -933,11 +938,11 @@ static void parse_border_style(Object style, WinConfig *fconfig, Error *err)
     char chars[8][MAX_SCHAR_SIZE];
     bool shadow_color;
   } defaults[] = {
-    { "double", { "╔", "═", "╗", "║", "╝", "═", "╚", "║" }, false },
-    { "single", { "┌", "─", "┐", "│", "┘", "─", "└", "│" }, false },
-    { "shadow", { "", "", " ", " ", " ", " ", " ", "" }, true },
-    { "rounded", { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }, false },
-    { "solid", { " ", " ", " ", " ", " ", " ", " ", " " }, false },
+    { opt_winborder_values[1], { "╔", "═", "╗", "║", "╝", "═", "╚", "║" }, false },
+    { opt_winborder_values[2], { "┌", "─", "┐", "│", "┘", "─", "└", "│" }, false },
+    { opt_winborder_values[3], { "", "", " ", " ", " ", " ", " ", "" }, true },
+    { opt_winborder_values[4], { "╭", "─", "╮", "│", "╯", "─", "╰", "│" }, false },
+    { opt_winborder_values[5], { " ", " ", " ", " ", " ", " ", " ", " " }, false },
     { NULL, { { NUL } }, false },
   };
 
@@ -1204,6 +1209,11 @@ static bool parse_win_config(win_T *wp, Dict(win_config) *config, WinConfig *fco
 
   if (HAS_KEY_X(config, focusable)) {
     fconfig->focusable = config->focusable;
+    fconfig->mouse = config->focusable;
+  }
+
+  if (HAS_KEY_X(config, mouse)) {
+    fconfig->mouse = config->mouse;
   }
 
   if (HAS_KEY_X(config, zindex)) {
@@ -1224,11 +1234,6 @@ static bool parse_win_config(win_T *wp, Dict(win_config) *config, WinConfig *fco
       api_set_error(err, kErrorTypeValidation, "non-float cannot have 'title'");
       goto fail;
     }
-    // title only work with border
-    if (!HAS_KEY_X(config, border) && !fconfig->border) {
-      api_set_error(err, kErrorTypeException, "title requires border to be set");
-      goto fail;
-    }
 
     parse_bordertext(config->title, kBorderTextTitle, fconfig, err);
     if (ERROR_SET(err)) {
@@ -1236,7 +1241,7 @@ static bool parse_win_config(win_T *wp, Dict(win_config) *config, WinConfig *fco
     }
 
     // handles unset 'title_pos' same as empty string
-    if (!parse_bordertext_pos(config->title_pos, kBorderTextTitle, fconfig, err)) {
+    if (!parse_bordertext_pos(wp, config->title_pos, kBorderTextTitle, fconfig, err)) {
       goto fail;
     }
   } else {
@@ -1251,11 +1256,6 @@ static bool parse_win_config(win_T *wp, Dict(win_config) *config, WinConfig *fco
       api_set_error(err, kErrorTypeValidation, "non-float cannot have 'footer'");
       goto fail;
     }
-    // footer only work with border
-    if (!HAS_KEY_X(config, border) && !fconfig->border) {
-      api_set_error(err, kErrorTypeException, "footer requires border to be set");
-      goto fail;
-    }
 
     parse_bordertext(config->footer, kBorderTextFooter, fconfig, err);
     if (ERROR_SET(err)) {
@@ -1263,7 +1263,7 @@ static bool parse_win_config(win_T *wp, Dict(win_config) *config, WinConfig *fco
     }
 
     // handles unset 'footer_pos' same as empty string
-    if (!parse_bordertext_pos(config->footer_pos, kBorderTextFooter, fconfig, err)) {
+    if (!parse_bordertext_pos(wp, config->footer_pos, kBorderTextFooter, fconfig, err)) {
       goto fail;
     }
   } else {
@@ -1273,12 +1273,18 @@ static bool parse_win_config(win_T *wp, Dict(win_config) *config, WinConfig *fco
     }
   }
 
+  Object border_style = OBJECT_INIT;
   if (HAS_KEY_X(config, border)) {
     if (is_split) {
       api_set_error(err, kErrorTypeValidation, "non-float cannot have 'border'");
       goto fail;
     }
-    parse_border_style(config->border, fconfig, err);
+    border_style = config->border;
+  } else if (*p_winborder != NUL && (wp == NULL || !wp->w_floating)) {
+    border_style = CSTR_AS_OBJ(p_winborder);
+  }
+  if (border_style.type != kObjectTypeNil) {
+    parse_border_style(border_style, fconfig, err);
     if (ERROR_SET(err)) {
       goto fail;
     }

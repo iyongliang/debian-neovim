@@ -4,6 +4,7 @@ local Screen = require('test.functional.ui.screen')
 local clear = n.clear
 local exec = n.exec
 local feed = n.feed
+local poke_eventloop = n.poke_eventloop
 
 describe('matchparen', function()
   before_each(clear)
@@ -11,7 +12,6 @@ describe('matchparen', function()
   -- oldtest: Test_visual_block_scroll()
   it('redraws properly after scrolling with scrolloff=1', function()
     local screen = Screen.new(30, 7)
-    screen:attach()
     exec([[
       source $VIMRUNTIME/plugin/matchparen.vim
       set scrolloff=1
@@ -34,20 +34,18 @@ describe('matchparen', function()
   -- oldtest: Test_matchparen_clear_highlight()
   it('matchparen highlight is cleared when switching buffer', function()
     local screen = Screen.new(20, 5)
-    screen:set_default_attr_ids({
-      [0] = { bold = true, foreground = Screen.colors.Blue },
-      [1] = { background = Screen.colors.Cyan },
-    })
-    screen:attach()
+    screen:add_extra_attr_ids {
+      [100] = { background = Screen.colors.Cyan1 },
+    }
 
     local screen1 = [[
-      {1:^()}                  |
-      {0:~                   }|*3
+      {100:^()}                  |
+      {1:~                   }|*3
                           |
     ]]
     local screen2 = [[
       ^aa                  |
-      {0:~                   }|*3
+      {1:~                   }|*3
                           |
     ]]
 
@@ -77,12 +75,9 @@ describe('matchparen', function()
   -- oldtest: Test_matchparen_win_execute()
   it('matchparen highlight when switching buffer in win_execute()', function()
     local screen = Screen.new(20, 5)
-    screen:set_default_attr_ids({
-      [1] = { background = Screen.colors.Cyan },
-      [2] = { reverse = true, bold = true },
-      [3] = { reverse = true },
-    })
-    screen:attach()
+    screen:add_extra_attr_ids {
+      [100] = { background = Screen.colors.Cyan1 },
+    }
 
     exec([[
       source $VIMRUNTIME/plugin/matchparen.vim
@@ -95,10 +90,10 @@ describe('matchparen', function()
       endfunc
     ]])
     screen:expect([[
-      {1:^{}}                  |
-      {2:[No Name] [+]       }|
-      {}                  |
+      {100:^{}}                  |
       {3:[No Name] [+]       }|
+      {}                  |
+      {2:[No Name] [+]       }|
                           |
     ]])
 
@@ -110,7 +105,6 @@ describe('matchparen', function()
   -- oldtest: Test_matchparen_pum_clear()
   it('is cleared when completion popup is shown', function()
     local screen = Screen.new(30, 9)
-    screen:attach()
 
     exec([[
       source $VIMRUNTIME/plugin/matchparen.vim
@@ -136,12 +130,9 @@ describe('matchparen', function()
   -- oldtest: Test_matchparen_mbyte()
   it("works with multibyte chars in 'matchpairs'", function()
     local screen = Screen.new(30, 10)
-    screen:set_default_attr_ids({
-      [0] = { bold = true, foreground = Screen.colors.Blue },
-      [1] = { background = Screen.colors.Cyan },
-      [2] = { bold = true },
-    })
-    screen:attach()
+    screen:add_extra_attr_ids {
+      [100] = { background = Screen.colors.Cyan1 },
+    }
 
     exec([[
       source $VIMRUNTIME/plugin/matchparen.vim
@@ -152,57 +143,122 @@ describe('matchparen', function()
     screen:expect([[
       ^aaaaaaaa（                    |
       bbbb）cc                      |
-      {0:~                             }|*7
+      {1:~                             }|*7
                                     |
     ]])
     feed('$')
     screen:expect([[
-      aaaaaaaa{1:^（}                    |
-      bbbb{1:）}cc                      |
-      {0:~                             }|*7
+      aaaaaaaa{100:^（}                    |
+      bbbb{100:）}cc                      |
+      {1:~                             }|*7
                                     |
     ]])
     feed('j')
     screen:expect([[
       aaaaaaaa（                    |
       bbbb）c^c                      |
-      {0:~                             }|*7
+      {1:~                             }|*7
                                     |
     ]])
     feed('2h')
     screen:expect([[
-      aaaaaaaa{1:（}                    |
-      bbbb{1:^）}cc                      |
-      {0:~                             }|*7
+      aaaaaaaa{100:（}                    |
+      bbbb{100:^）}cc                      |
+      {1:~                             }|*7
                                     |
     ]])
     feed('0')
     screen:expect([[
       aaaaaaaa（                    |
       ^bbbb）cc                      |
-      {0:~                             }|*7
+      {1:~                             }|*7
                                     |
     ]])
     feed('kA')
     screen:expect([[
-      aaaaaaaa{1:（}^                    |
-      bbbb{1:）}cc                      |
-      {0:~                             }|*7
-      {2:-- INSERT --}                  |
+      aaaaaaaa{100:（}^                    |
+      bbbb{100:）}cc                      |
+      {1:~                             }|*7
+      {5:-- INSERT --}                  |
     ]])
     feed('<Down>')
     screen:expect([[
       aaaaaaaa（                    |
       bbbb）cc^                      |
-      {0:~                             }|*7
-      {2:-- INSERT --}                  |
+      {1:~                             }|*7
+      {5:-- INSERT --}                  |
     ]])
     feed('<C-W>')
     screen:expect([[
-      aaaaaaaa{1:（}                    |
-      bbbb{1:）}^                        |
-      {0:~                             }|*7
-      {2:-- INSERT --}                  |
+      aaaaaaaa{100:（}                    |
+      bbbb{100:）}^                        |
+      {1:~                             }|*7
+      {5:-- INSERT --}                  |
+    ]])
+  end)
+
+  -- oldtest: Test_matchparen_ignore_sh_case()
+  it('ignores shell case statements', function()
+    local screen = Screen.new(40, 15)
+    exec([[
+      syntax on
+      source $VIMRUNTIME/plugin/matchparen.vim
+      set ft=sh
+      call setline(1, [
+            \ '#!/bin/sh',
+            \ 'SUSUWU_PRINT() (',
+            \ '  case "${LEVEL}" in',
+            \ '    "$SUSUWU_SH_NOTICE")',
+            \ '    ${SUSUWU_S} && return 1',
+            \ '  ;;',
+            \ '    "$SUSUWU_SH_DEBUG")',
+            \ '    (! ${SUSUWU_VERBOSE}) && return 1',
+            \ '  ;;',
+            \ '  esac',
+            \ '  # snip',
+            \ ')'
+            \ ])
+      call cursor(4, 26)
+    ]])
+    screen:add_extra_attr_ids({
+      [100] = { foreground = tonumber('0x6a0dad') },
+    })
+    screen:expect([[
+      {18:#!/bin/sh}                               |
+      {25:SUSUWU_PRINT() (}                        |
+        {15:case} {15:"}{100:${LEVEL}}{15:"} {15:in}                    |
+          {15:"}{100:$SUSUWU_SH_NOTICE}{15:"^)}                |
+          {100:${SUSUWU_S}} {15:&&} {15:return} {26:1}             |
+        {15:;;}                                    |
+          {15:"}{100:$SUSUWU_SH_DEBUG}{15:")}                 |
+          {100:(}{15:!} {100:${SUSUWU_VERBOSE})} {15:&&} {15:return} {26:1}   |
+        {15:;;}                                    |
+        {15:esac}                                  |
+        {18:# snip}                                |
+      {25:)}                                       |
+      {1:~                                       }|*2
+                                              |
+    ]])
+    -- Send keys one by one so that CursorMoved is triggered.
+    for _, c in ipairs({ 'A', ' ', 'f', 'o', 'o', 'b', 'a', 'r' }) do
+      feed(c)
+      poke_eventloop()
+    end
+    screen:expect([[
+      {18:#!/bin/sh}                               |
+      {25:SUSUWU_PRINT() (}                        |
+        {15:case} {15:"}{100:${LEVEL}}{15:"} {15:in}                    |
+          {15:"}{100:$SUSUWU_SH_NOTICE}{15:")} foobar^         |
+          {100:${SUSUWU_S}} {15:&&} {15:return} {26:1}             |
+        {15:;;}                                    |
+          {15:"}{100:$SUSUWU_SH_DEBUG}{15:")}                 |
+          {100:(}{15:!} {100:${SUSUWU_VERBOSE})} {15:&&} {15:return} {26:1}   |
+        {15:;;}                                    |
+        {15:esac}                                  |
+        {18:# snip}                                |
+      {25:)}                                       |
+      {1:~                                       }|*2
+      {5:-- INSERT --}                            |
     ]])
   end)
 end)

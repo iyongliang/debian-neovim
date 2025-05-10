@@ -10,6 +10,7 @@
 #include "nvim/buffer_defs.h"
 #include "nvim/charset.h"
 #include "nvim/drawscreen.h"
+#include "nvim/errors.h"
 #include "nvim/eval/funcs.h"
 #include "nvim/eval/typval.h"
 #include "nvim/eval/window.h"
@@ -189,19 +190,7 @@ static int match_add(win_T *wp, const char *const grp, const char *const pat, in
 
     // Calculate top and bottom lines for redrawing area
     if (toplnum != 0) {
-      if (wp->w_buffer->b_mod_set) {
-        if (wp->w_buffer->b_mod_top > toplnum) {
-          wp->w_buffer->b_mod_top = toplnum;
-        }
-        if (wp->w_buffer->b_mod_bot < botlnum) {
-          wp->w_buffer->b_mod_bot = botlnum;
-        }
-      } else {
-        wp->w_buffer->b_mod_set = true;
-        wp->w_buffer->b_mod_top = toplnum;
-        wp->w_buffer->b_mod_bot = botlnum;
-        wp->w_buffer->b_mod_xlines = 0;
-      }
+      redraw_win_range_later(wp, toplnum, botlnum);
       m->mit_toplnum = toplnum;
       m->mit_botlnum = botlnum;
       rtype = UPD_VALID;
@@ -267,19 +256,7 @@ static int match_delete(win_T *wp, int id, bool perr)
   vim_regfree(cur->mit_match.regprog);
   xfree(cur->mit_pattern);
   if (cur->mit_toplnum != 0) {
-    if (wp->w_buffer->b_mod_set) {
-      if (wp->w_buffer->b_mod_top > cur->mit_toplnum) {
-        wp->w_buffer->b_mod_top = cur->mit_toplnum;
-      }
-      if (wp->w_buffer->b_mod_bot < cur->mit_botlnum) {
-        wp->w_buffer->b_mod_bot = cur->mit_botlnum;
-      }
-    } else {
-      wp->w_buffer->b_mod_set = true;
-      wp->w_buffer->b_mod_top = cur->mit_toplnum;
-      wp->w_buffer->b_mod_bot = cur->mit_botlnum;
-      wp->w_buffer->b_mod_xlines = 0;
-    }
+    redraw_win_range_later(wp, cur->mit_toplnum, cur->mit_botlnum);
     rtype = UPD_VALID;
   }
   xfree(cur->mit_pos_array);
@@ -705,6 +682,9 @@ int update_search_hl(win_T *wp, linenr_T lnum, colnr_T col, char **line, match_T
         // group.
         if (shl == search_hl && shl->has_cursor) {
           shl->attr_cur = win_hl_attr(wp, HLF_LC);
+          if (shl->attr_cur != shl->attr) {
+            search_hl_has_cursor_lnum = lnum;
+          }
         } else {
           shl->attr_cur = shl->attr;
         }

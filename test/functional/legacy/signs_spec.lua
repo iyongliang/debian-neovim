@@ -26,18 +26,21 @@ describe('signs', function()
   -- oldtest: Test_sign_cursor_position()
   it('are drawn correctly', function()
     local screen = Screen.new(75, 6)
-    screen:attach()
+    screen:add_extra_attr_ids({
+      [100] = { foreground = Screen.colors.Blue4, background = Screen.colors.Yellow },
+    })
     exec([[
       call setline(1, [repeat('x', 75), 'mmmm', 'yyyy'])
       call cursor(2,1)
       sign define s1 texthl=Search text==>
+      sign define s2 linehl=Pmenu
       redraw
       sign place 10 line=2 name=s1
     ]])
     screen:expect([[
       {7:  }xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
       {7:  }xx                                                                       |
-      {10:=>}^mmmm                                                                     |
+      {100:=>}^mmmm                                                                     |
       {7:  }yyyy                                                                     |
       {1:~                                                                          }|
                                                                                  |
@@ -48,7 +51,18 @@ describe('signs', function()
     screen:expect([[
       {7:  }xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
       {7:  }xx                                                                       |
-      {10:-)}^mmmm                                                                     |
+      {100:-)}^mmmm                                                                     |
+      {7:  }yyyy                                                                     |
+      {1:~                                                                          }|
+                                                                                 |
+    ]])
+
+    -- Also place a line HL sign
+    command('sign place 11 line=2 name=s2')
+    screen:expect([[
+      {7:  }xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|
+      {7:  }xx                                                                       |
+      {100:-)}{4:^mmmm                                                                     }|
       {7:  }yyyy                                                                     |
       {1:~                                                                          }|
                                                                                  |
@@ -56,6 +70,7 @@ describe('signs', function()
 
     -- update cursor position calculation
     feed('lh')
+    command('sign unplace 11')
     command('sign unplace 10')
     screen:expect([[
       xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx|

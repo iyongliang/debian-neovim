@@ -7,12 +7,13 @@
 
 #include "nvim/garray.h"
 #include "nvim/log.h"
+#include "nvim/macros_defs.h"
 #include "nvim/memory.h"
 #include "nvim/path.h"
 #include "nvim/strings.h"
 
 #ifdef INCLUDE_GENERATED_DECLARATIONS
-# include "garray.c.generated.h"
+# include "garray.c.generated.h"  // IWYU pragma: keep
 #endif
 
 /// Clear an allocated growing array.
@@ -78,16 +79,12 @@ void ga_grow(garray_T *gap, int n)
   }
 
   // the garray grows by at least growsize
-  if (n < gap->ga_growsize) {
-    n = gap->ga_growsize;
-  }
+  n = MAX(n, gap->ga_growsize);
 
   // A linear growth is very inefficient when the array grows big.  This
   // is a compromise between allocating memory that won't be used and too
   // many copy operations. A factor of 1.5 seems reasonable.
-  if (n < gap->ga_len / 2) {
-    n = gap->ga_len / 2;
-  }
+  n = MAX(n, gap->ga_len / 2);
 
   int new_maxlen = gap->ga_len + n;
 
@@ -201,12 +198,13 @@ void ga_concat(garray_T *gap, const char *restrict s)
 void ga_concat_len(garray_T *const gap, const char *restrict s, const size_t len)
   FUNC_ATTR_NONNULL_ALL
 {
-  if (len) {
-    ga_grow(gap, (int)len);
-    char *data = gap->ga_data;
-    memcpy(data + gap->ga_len, s, len);
-    gap->ga_len += (int)len;
+  if (len == 0) {
+    return;
   }
+  ga_grow(gap, (int)len);
+  char *data = gap->ga_data;
+  memcpy(data + gap->ga_len, s, len);
+  gap->ga_len += (int)len;
 }
 
 /// Append one byte to a growarray which contains bytes.

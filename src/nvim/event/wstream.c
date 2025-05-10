@@ -81,7 +81,7 @@ bool wstream_write(Stream *stream, WBuffer *buffer)
     uv_fs_t req;
 
     // Synchronous write
-    uv_fs_write(stream->uv.idle.loop, &req, stream->fd, &uvbuf, 1, (int64_t)stream->fpos, NULL);
+    uv_fs_write(stream->uv.idle.loop, &req, stream->fd, &uvbuf, 1, stream->fpos, NULL);
 
     uv_fs_req_cleanup(&req);
 
@@ -89,7 +89,7 @@ bool wstream_write(Stream *stream, WBuffer *buffer)
 
     assert(stream->write_cb == NULL);
 
-    stream->fpos += (size_t)MAX(req.result, 0);
+    stream->fpos += MAX(req.result, 0);
     return req.result > 0;
   }
 
@@ -156,8 +156,8 @@ static void write_cb(uv_write_t *req, int status)
   data->stream->pending_reqs--;
 
   if (data->stream->closed && data->stream->pending_reqs == 0) {
-    // Last pending write, free the stream;
-    stream_close_handle(data->stream);
+    // Last pending write; free the stream.
+    stream_close_handle(data->stream, false);
   }
 
   xfree(data);
@@ -173,4 +173,9 @@ void wstream_release_wbuffer(WBuffer *buffer)
 
     xfree(buffer);
   }
+}
+
+void wstream_may_close(Stream *stream)
+{
+  stream_may_close(stream, false);
 }

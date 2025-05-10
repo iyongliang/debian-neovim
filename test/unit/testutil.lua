@@ -146,11 +146,23 @@ local function filter_complex_blocks(body)
         or string.find(line, 'value_init_')
         or string.find(line, 'UUID_NULL') -- static const uuid_t UUID_NULL = {...}
         or string.find(line, 'inline _Bool')
+        -- used by musl libc headers on 32-bit arches via __REDIR marco
+        or string.find(line, '__typeof__')
         -- used by macOS headers
         or string.find(line, 'typedef enum : ')
         or string.find(line, 'mach_vm_range_recipe')
       )
     then
+      -- Remove GCC's extension keyword which is just used to disable warnings.
+      line = string.gsub(line, '__extension__', '')
+
+      -- HACK: remove bitfields from specific structs as luajit can't seem to handle them.
+      if line:find('struct VTermState') then
+        line = string.gsub(line, 'state : 8;', 'state;')
+      end
+      if line:find('VTermStringFragment') then
+        line = string.gsub(line, 'size_t.*len : 30;', 'size_t len;')
+      end
       result[#result + 1] = line
     end
   end
@@ -864,18 +876,6 @@ local function ptr2key(ptr)
   return ffi.string(s)
 end
 
-local function is_asan()
-  cimport('./src/nvim/version.h')
-  local status, res = pcall(function()
-    return lib.version_cflags
-  end)
-  if status then
-    return ffi.string(res):match('-fsanitize=[a-z,]*address')
-  else
-    return false
-  end
-end
-
 --- @class test.unit.testutil.module
 local M = {
   cimport = cimport,
@@ -904,7 +904,6 @@ local M = {
   ptr2addr = ptr2addr,
   ptr2key = ptr2key,
   debug_log = debug_log,
-  is_asan = is_asan,
 }
 --- @class test.unit.testutil: test.unit.testutil.module, test.testutil
 M = vim.tbl_extend('error', M, t_global)

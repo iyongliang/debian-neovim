@@ -4,20 +4,25 @@ local Screen = require('test.functional.ui.screen')
 
 local assert_alive = n.assert_alive
 local clear, feed = n.clear, n.feed
-local eval, eq, neq, ok = n.eval, t.eq, t.neq, t.ok
-local feed_command, source, expect = n.feed_command, n.source, n.expect
+local eval, eq, ok = n.eval, t.eq, t.ok
+local source, expect = n.source, n.expect
 local fn = n.fn
 local command = n.command
 local api = n.api
 local poke_eventloop = n.poke_eventloop
+local exec_lua = n.exec_lua
 
 describe('completion', function()
   local screen
 
   before_each(function()
     clear()
+    source([[
+      set completeopt-=noselect
+      " Avoid tags completion (if running test locally).
+      set complete-=t
+    ]])
     screen = Screen.new(60, 8)
-    screen:attach()
     screen:add_extra_attr_ids {
       [100] = { foreground = Screen.colors.Gray0, background = Screen.colors.Yellow },
       [101] = { background = Screen.colors.Gray0 },
@@ -57,29 +62,12 @@ describe('completion', function()
     it('is readonly', function()
       screen:try_resize(80, 8)
       feed('ifoo<ESC>o<C-x><C-n><ESC>')
-      feed_command('let v:completed_item.word = "bar"')
-      neq(nil, string.find(eval('v:errmsg'), '^E46: '))
-      feed_command('let v:errmsg = ""')
-
-      feed_command('let v:completed_item.abbr = "bar"')
-      neq(nil, string.find(eval('v:errmsg'), '^E46: '))
-      feed_command('let v:errmsg = ""')
-
-      feed_command('let v:completed_item.menu = "bar"')
-      neq(nil, string.find(eval('v:errmsg'), '^E46: '))
-      feed_command('let v:errmsg = ""')
-
-      feed_command('let v:completed_item.info = "bar"')
-      neq(nil, string.find(eval('v:errmsg'), '^E46: '))
-      feed_command('let v:errmsg = ""')
-
-      feed_command('let v:completed_item.kind = "bar"')
-      neq(nil, string.find(eval('v:errmsg'), '^E46: '))
-      feed_command('let v:errmsg = ""')
-
-      feed_command('let v:completed_item.user_data = "bar"')
-      neq(nil, string.find(eval('v:errmsg'), '^E46: '))
-      feed_command('let v:errmsg = ""')
+      t.matches('E46%: ', t.pcall_err(command, 'let v:completed_item.word = "bar"'))
+      t.matches('E46%: ', t.pcall_err(command, 'let v:completed_item.abbr = "bar"'))
+      t.matches('E46%: ', t.pcall_err(command, 'let v:completed_item.menu = "bar"'))
+      t.matches('E46%: ', t.pcall_err(command, 'let v:completed_item.info = "bar"'))
+      t.matches('E46%: ', t.pcall_err(command, 'let v:completed_item.kind = "bar"'))
+      t.matches('E46%: ', t.pcall_err(command, 'let v:completed_item.user_data = "bar"'))
     end)
     it('returns expected dict in omni completion', function()
       source([[
@@ -122,7 +110,7 @@ describe('completion', function()
     end)
 
     it('inserts the first candidate if default', function()
-      feed_command('set completeopt+=menuone')
+      command('set completeopt+=menuone')
       feed('ifoo<ESC>o')
       screen:expect([[
         foo                                                         |
@@ -160,7 +148,7 @@ describe('completion', function()
       eq('foo', eval('getline(3)'))
     end)
     it('selects the first candidate if noinsert', function()
-      feed_command('set completeopt+=menuone,noinsert')
+      command('set completeopt+=menuone,noinsert')
       feed('ifoo<ESC>o<C-x><C-n>')
       screen:expect([[
         foo                                                         |
@@ -190,7 +178,7 @@ describe('completion', function()
       eq('foo', eval('getline(3)'))
     end)
     it('does not insert the first candidate if noselect', function()
-      feed_command('set completeopt+=menuone,noselect')
+      command('set completeopt+=menuone,noselect')
       feed('ifoo<ESC>o<C-x><C-n>')
       screen:expect([[
         foo                                                         |
@@ -221,7 +209,7 @@ describe('completion', function()
       eq('bar', eval('getline(3)'))
     end)
     it('does not select/insert the first candidate if noselect and noinsert', function()
-      feed_command('set completeopt+=menuone,noselect,noinsert')
+      command('set completeopt+=menuone,noselect,noinsert')
       feed('ifoo<ESC>o<C-x><C-n>')
       screen:expect([[
         foo                                                         |
@@ -258,14 +246,14 @@ describe('completion', function()
       eq('', eval('getline(3)'))
     end)
     it('does not change modified state if noinsert', function()
-      feed_command('set completeopt+=menuone,noinsert')
-      feed_command('setlocal nomodified')
+      command('set completeopt+=menuone,noinsert')
+      command('setlocal nomodified')
       feed('i<C-r>=TestComplete()<CR><ESC>')
       eq(0, eval('&l:modified'))
     end)
     it('does not change modified state if noselect', function()
-      feed_command('set completeopt+=menuone,noselect')
-      feed_command('setlocal nomodified')
+      command('set completeopt+=menuone,noselect')
+      command('setlocal nomodified')
       feed('i<C-r>=TestComplete()<CR><ESC>')
       eq(0, eval('&l:modified'))
     end)
@@ -279,8 +267,8 @@ describe('completion', function()
         return ''
       endfunction
       ]])
-      feed_command('set completeopt+=noselect,noinsert')
-      feed_command('inoremap <right> <c-r>=TestComplete()<cr>')
+      command('set completeopt+=noselect,noinsert')
+      command('inoremap <right> <c-r>=TestComplete()<cr>')
     end)
 
     local tests = {
@@ -327,7 +315,7 @@ describe('completion', function()
     end
   end)
 
-  describe('refresh:always', function()
+  describe('with refresh:always and noselect', function()
     before_each(function()
       source([[
         function! TestCompletion(findstart, base) abort
@@ -459,6 +447,71 @@ describe('completion', function()
         June
         June]])
     end)
+
+    it('Enter inserts newline at original text after adding leader', function()
+      feed('iJ<C-x><C-u>')
+      poke_eventloop()
+      feed('u')
+      poke_eventloop()
+      feed('<CR>')
+      expect([[
+        Ju
+        ]])
+      feed('J<C-x><C-u>')
+      poke_eventloop()
+      feed('<CR>')
+      expect([[
+        Ju
+        J
+        ]])
+    end)
+  end)
+
+  describe('with noselect but not refresh:always', function()
+    before_each(function()
+      source([[
+        function! TestCompletion(findstart, base) abort
+          if a:findstart
+            let line = getline('.')
+            let start = col('.') - 1
+            while start > 0 && line[start - 1] =~ '\a'
+              let start -= 1
+            endwhile
+            return start
+          else
+            let ret = []
+            for m in split("January February March April May June July August September October November December")
+              if m =~ a:base  " match by regex
+                call add(ret, m)
+              endif
+            endfor
+            return {'words':ret}
+          endif
+        endfunction
+
+        set completeopt=menuone,noselect
+        set completefunc=TestCompletion
+      ]])
+    end)
+
+    it('Enter inserts newline at original text after adding leader', function()
+      feed('iJ<C-x><C-u>')
+      poke_eventloop()
+      feed('u')
+      poke_eventloop()
+      feed('<CR>')
+      expect([[
+        Ju
+        ]])
+      feed('<Esc>')
+      poke_eventloop()
+      -- The behavior should be the same when completion has been interrupted,
+      -- which can happen interactively if the completion function is slow.
+      feed('ggVGSJ<C-x><C-u>u<CR>')
+      expect([[
+        Ju
+        ]])
+    end)
   end)
 
   describe('with a lot of items', function()
@@ -469,7 +522,7 @@ describe('completion', function()
         return ''
       endfunction
       ]])
-      feed_command('set completeopt=menuone,noselect')
+      command('set completeopt=menuone,noselect')
     end)
 
     it('works', function()
@@ -727,7 +780,7 @@ describe('completion', function()
   end)
 
   it('disables folding during completion', function()
-    feed_command('set foldmethod=indent')
+    command('set foldmethod=indent')
     feed('i<Tab>foo<CR><Tab>bar<Esc>gg')
     screen:expect([[
               ^foo                                                 |
@@ -746,7 +799,7 @@ describe('completion', function()
   end)
 
   it('popupmenu is not interrupted by events', function()
-    feed_command('set complete=.')
+    command('set complete=.')
 
     feed('ifoobar fooegg<cr>f<c-p>')
     screen:expect([[
@@ -812,14 +865,75 @@ describe('completion', function()
       }
     end)
 
+    it('prefix is not included in completion for cmdline mode', function()
+      feed(':lua math.a<Tab>')
+      screen:expect([[
+                                                                    |
+        {1:~                                                           }|*5
+        {100:abs}{3:  acos  asin  atan  atan2                                }|
+        :lua math.abs^                                               |
+      ]])
+      feed('<Tab>')
+      screen:expect([[
+                                                                    |
+        {1:~                                                           }|*5
+        {3:abs  }{100:acos}{3:  asin  atan  atan2                                }|
+        :lua math.acos^                                              |
+      ]])
+    end)
+
+    it('prefix is not included in completion for i_CTRL-X_CTRL-V #19623', function()
+      feed('ilua math.a<C-X><C-V>')
+      screen:expect([[
+        lua math.abs^                                                |
+        {1:~       }{12: abs            }{1:                                    }|
+        {1:~       }{4: acos           }{1:                                    }|
+        {1:~       }{4: asin           }{1:                                    }|
+        {1:~       }{4: atan           }{1:                                    }|
+        {1:~       }{4: atan2          }{1:                                    }|
+        {1:~                                                           }|
+        {5:-- Command-line completion (^V^N^P) }{6:match 1 of 5}            |
+      ]])
+      feed('<C-V>')
+      screen:expect([[
+        lua math.acos^                                               |
+        {1:~       }{4: abs            }{1:                                    }|
+        {1:~       }{12: acos           }{1:                                    }|
+        {1:~       }{4: asin           }{1:                                    }|
+        {1:~       }{4: atan           }{1:                                    }|
+        {1:~       }{4: atan2          }{1:                                    }|
+        {1:~                                                           }|
+        {5:-- Command-line completion (^V^N^P) }{6:match 2 of 5}            |
+      ]])
+    end)
+
+    it('works when cursor is in the middle of cmdline #29586', function()
+      feed(':lua math.a(); 1<Left><Left><Left><Left><Left><Tab>')
+      screen:expect([[
+                                                                    |
+        {1:~                                                           }|*5
+        {100:abs}{3:  acos  asin  atan  atan2                                }|
+        :lua math.abs^(); 1                                          |
+      ]])
+    end)
+
     it('provides completion from `getcompletion()`', function()
       eq({ 'vim' }, fn.getcompletion('vi', 'lua'))
       eq({ 'api' }, fn.getcompletion('vim.ap', 'lua'))
       eq({ 'tbl_filter' }, fn.getcompletion('vim.tbl_fil', 'lua'))
       eq({ 'vim' }, fn.getcompletion('print(vi', 'lua'))
+      eq({ 'abs', 'acos', 'asin', 'atan', 'atan2' }, fn.getcompletion('math.a', 'lua'))
+      eq({ 'abs', 'acos', 'asin', 'atan', 'atan2' }, fn.getcompletion('lua math.a', 'cmdline'))
       -- fuzzy completion is not supported, so the result should be the same
       command('set wildoptions+=fuzzy')
       eq({ 'vim' }, fn.getcompletion('vi', 'lua'))
+    end)
+
+    it('completes _defer_require() modules', function()
+      -- vim.lsp.c<tab> -> vim.lsp.completion
+      ok(vim.tbl_contains(fn.getcompletion('lua vim.lsp.c', 'cmdline'), 'completion'))
+      -- vim.lsp.completion.g<tab> -> vim.lsp.completion.get
+      ok(vim.tbl_contains(fn.getcompletion('lua vim.lsp.completion.g', 'cmdline'), 'get'))
     end)
   end)
 
@@ -908,19 +1022,19 @@ describe('completion', function()
   end)
 
   it("'ignorecase' 'infercase' CTRL-X CTRL-N #6451", function()
-    feed_command('set ignorecase infercase')
-    feed_command('edit runtime/doc/backers.txt')
+    command('set ignorecase infercase')
+    command('edit runtime/doc/credits.txt')
     feed('oX<C-X><C-N>')
     screen:expect {
       grid = [[
-      *backers.txt*          Nvim                                 |
-      Xnull^                                                       |
-      {12:Xnull          }{101: }                                            |
-      {4:Xoxomoon       }{101: }                                            |
-      {4:Xu             }{101: }     NVIM REFERENCE MANUAL                  |
-      {4:Xpayn          }{12: }                                            |
-      {4:Xinity         }{12: }                                            |
-      {5:-- Keyword Local completion (^N^P) }{6:match 1 of 7}             |
+      *credits.txt*          Nvim                                 |
+      Xvi^                                                         |
+      {12:Xvi            }{101: }                                            |
+      {4:Xvim           }{101: }                                            |
+      {4:X11            }{12: }     NVIM REFERENCE MANUAL                  |
+      {4:Xnull          }{12: }                                            |
+      {4:Xoxomoon       }{12: }                                            |
+      {5:-- Keyword Local completion (^N^P) }{6:match 1 of 10}            |
     ]],
     }
   end)
@@ -1211,5 +1325,30 @@ describe('completion', function()
         {5:-- INSERT --}                                                |
       ]],
     })
+  end)
+
+  describe('nvim__complete_set', function()
+    it("fails when 'completeopt' does not include popup", function()
+      exec_lua([[
+        function _G.omni_test(findstart, base)
+          if findstart == 1 then
+            return vim.fn.col('.') - 1
+          end
+          return { { word = 'one' } }
+        end
+        vim.api.nvim_create_autocmd('CompleteChanged', {
+          callback = function()
+            local ok, err = pcall(vim.api.nvim__complete_set, 0, { info = '1info' })
+            if not ok then
+              vim.g.err_msg = err
+            end
+          end,
+        })
+        vim.opt.completeopt = 'menu,menuone'
+        vim.opt.omnifunc = 'v:lua.omni_test'
+      ]])
+      feed('S<C-X><C-O>')
+      eq('completeopt option does not include popup', api.nvim_get_var('err_msg'))
+    end)
   end)
 end)

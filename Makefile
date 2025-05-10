@@ -1,4 +1,14 @@
 ifeq ($(OS),Windows_NT)
+  ifeq '$(findstring ;,$(PATH))' ';'
+    UNIX_LIKE := FALSE
+  else
+    UNIX_LIKE := TRUE
+  endif
+else
+  UNIX_LIKE := TRUE
+endif
+
+ifeq ($(UNIX_LIKE),FALSE)
   SHELL := powershell.exe
   .SHELLFLAGS := -NoProfile -NoLogo
   MKDIR := @$$null = new-item -itemtype directory -force
@@ -15,7 +25,6 @@ else
   RM := rm -rf
   CMAKE := $(shell (command -v cmake3 || command -v cmake || echo cmake))
   CMAKE_GENERATOR ?= "$(shell (command -v ninja > /dev/null 2>&1 && echo "Ninja") || echo "Unix Makefiles")"
-  GENERATOR_CMD ?= "$(shell (command -v ninja > /dev/null 2>&1 && echo "ninja") || echo "make")"
   define rmdir
     rm -rf $1
   endef
@@ -127,13 +136,16 @@ functionaltest-lua: | nvim
 	$(CMAKE) --build build --target functionaltest
 
 FORMAT=formatc formatlua format
-LINT=lintlua lintsh lintc clang-analyzer lintcommit lintdoc lint
+LINT=lintlua lintsh lintc clang-analyzer lintcommit lintdoc lint luals
 TEST=functionaltest unittest
 generated-sources benchmark $(FORMAT) $(LINT) $(TEST) doc: | build/.ran-cmake
 	$(CMAKE) --build build --target $@
 
 test: $(TEST)
 
+# iwyu-fix-includes can be downloaded from
+# https://github.com/include-what-you-use/include-what-you-use/blob/master/fix_includes.py.
+# Create a iwyu-fix-includes shell script in your $PATH that invokes the python script.
 iwyu: build/.ran-cmake
 	$(CMAKE) --preset iwyu
 	$(CMAKE) --build build > build/iwyu.log
@@ -158,7 +170,7 @@ distclean:
 	$(MAKE) clean
 
 install: checkprefix nvim
-	$(GENERATOR_CMD) -C build install
+	$(CMAKE) --install build
 
 appimage:
 	bash scripts/genappimage.sh

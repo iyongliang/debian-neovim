@@ -399,18 +399,18 @@ func Test_smoothscroll_wrap_long_line()
   call term_sendkeys(buf, ":set scrolloff=1\<CR>")
   call term_sendkeys(buf, "10|\<C-E>")
   call VerifyScreenDump(buf, 'Test_smooth_long_6', {})
-  
+
   " 'scrolloff' set to 1, scrolling down, cursor moves screen line up
   call term_sendkeys(buf, "\<C-E>")
   call term_sendkeys(buf, "gjgj")
   call term_sendkeys(buf, "\<C-Y>")
   call VerifyScreenDump(buf, 'Test_smooth_long_7', {})
-  
+
   " 'scrolloff' set to 2, scrolling up, cursor moves screen line down
   call term_sendkeys(buf, ":set scrolloff=2\<CR>")
   call term_sendkeys(buf, "10|\<C-E>")
   call VerifyScreenDump(buf, 'Test_smooth_long_8', {})
-  
+
   " 'scrolloff' set to 2, scrolling down, cursor moves screen line up
   call term_sendkeys(buf, "\<C-E>")
   call term_sendkeys(buf, "gj")
@@ -451,7 +451,7 @@ func Test_smoothscroll_wrap_long_line()
   call term_sendkeys(buf, "3Gzt")
   call term_sendkeys(buf, "\<C-E>j")
   call VerifyScreenDump(buf, 'Test_smooth_long_16', {})
-  
+
   call StopVimInTerminal(buf)
 endfunc
 
@@ -466,7 +466,7 @@ func Test_smoothscroll_one_long_line()
   call writefile(lines, 'XSmoothOneLong', 'D')
   let buf = RunVimInTerminal('-S XSmoothOneLong', #{rows: 6, cols: 40})
   call VerifyScreenDump(buf, 'Test_smooth_one_long_1', {})
-  
+
   call term_sendkeys(buf, "\<C-E>")
   call VerifyScreenDump(buf, 'Test_smooth_one_long_2', {})
 
@@ -488,7 +488,7 @@ func Test_smoothscroll_long_line_showbreak()
   call writefile(lines, 'XSmoothLongShowbreak', 'D')
   let buf = RunVimInTerminal('-S XSmoothLongShowbreak', #{rows: 6, cols: 40})
   call VerifyScreenDump(buf, 'Test_smooth_long_showbreak_1', {})
-  
+
   call term_sendkeys(buf, "\<C-E>")
   call VerifyScreenDump(buf, 'Test_smooth_long_showbreak_2', {})
 
@@ -678,7 +678,7 @@ func Test_smoothscroll_cursor_scrolloff()
   call NewWindow(10, 20)
   setl smoothscroll wrap
   setl scrolloff=3
-  
+
   " 120 chars are 6 screen lines
   call setline(1, "abcdefghijklmnopqrstABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrstABCDEFGHIJKLMNOPQRSTabcdefghijklmnopqrstABCDEFGHIJKLMNOPQRST")
   call setline(2, "below")
@@ -1217,6 +1217,61 @@ func Test_smooth_long_scrolloff()
   call VerifyScreenDump(buf, 'Test_smooth_long_scrolloff_7', {})
 
   call StopVimInTerminal(buf)
+endfunc
+
+func Test_smoothscroll_listchars_eol()
+  call NewWindow(10, 40)
+  setlocal list listchars=eol:$ scrolloff=0 smoothscroll
+  call setline(1, repeat('-', 40))
+  call append(1, repeat(['foobar'], 10))
+
+  normal! G
+  call assert_equal(2, line('w0'))
+  call assert_equal(0, winsaveview().skipcol)
+
+  exe "normal! \<C-Y>"
+  call assert_equal(1, line('w0'))
+  call assert_equal(40, winsaveview().skipcol)
+
+  exe "normal! \<C-Y>"
+  call assert_equal(1, line('w0'))
+  call assert_equal(0, winsaveview().skipcol)
+
+  exe "normal! \<C-Y>"
+  call assert_equal(1, line('w0'))
+  call assert_equal(0, winsaveview().skipcol)
+
+  exe "normal! \<C-E>"
+  call assert_equal(1, line('w0'))
+  call assert_equal(40, winsaveview().skipcol)
+
+  exe "normal! \<C-E>"
+  call assert_equal(2, line('w0'))
+  call assert_equal(0, winsaveview().skipcol)
+
+  for ve in ['', 'all', 'onemore']
+    let &virtualedit = ve
+    normal! gg
+    call assert_equal(1, line('w0'))
+    call assert_equal(0, winsaveview().skipcol)
+
+    exe "normal! \<C-E>"
+    redraw  " redrawing should not cause another scroll
+    call assert_equal(1, line('w0'))
+    call assert_equal(40, winsaveview().skipcol)
+
+    exe "normal! \<C-E>"
+    redraw
+    call assert_equal(2, line('w0'))
+    call assert_equal(0, winsaveview().skipcol)
+
+    if ve != 'all'
+      call assert_equal([0, 2, 1, 0], getpos('.'))
+    endif
+  endfor
+
+  set virtualedit&
+  bwipe!
 endfunc
 
 " vim: shiftwidth=2 sts=2 expandtab

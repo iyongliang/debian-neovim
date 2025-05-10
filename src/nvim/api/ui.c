@@ -1,6 +1,5 @@
 #include <assert.h>
 #include <inttypes.h>
-#include <msgpack/pack.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -24,7 +23,6 @@
 #include "nvim/event/wstream.h"
 #include "nvim/globals.h"
 #include "nvim/grid.h"
-#include "nvim/grid_defs.h"
 #include "nvim/highlight.h"
 #include "nvim/macros_defs.h"
 #include "nvim/main.h"
@@ -35,6 +33,7 @@
 #include "nvim/msgpack_rpc/channel.h"
 #include "nvim/msgpack_rpc/channel_defs.h"
 #include "nvim/msgpack_rpc/packer.h"
+#include "nvim/msgpack_rpc/packer_defs.h"
 #include "nvim/option.h"
 #include "nvim/types_defs.h"
 #include "nvim/ui.h"
@@ -94,15 +93,15 @@ void remote_ui_free_all_mem(void)
 }
 #endif
 
-/// Wait until ui has connected on stdio channel if only_stdio
-/// is true, otherwise any channel.
+/// Wait until UI has connected.
+///
+/// @param only_stdio UI is expected to connect on stdio.
 void remote_ui_wait_for_attach(bool only_stdio)
 {
   if (only_stdio) {
     Channel *channel = find_channel(CHAN_STDIO);
     if (!channel) {
-      // this function should only be called in --embed mode, stdio channel
-      // can be assumed.
+      // `only_stdio` implies --embed mode, thus stdio channel can be assumed.
       abort();
     }
 
@@ -129,8 +128,7 @@ void remote_ui_wait_for_attach(bool only_stdio)
 /// @param height  Requested screen rows
 /// @param options  |ui-option| map
 /// @param[out] err Error details, if any
-void nvim_ui_attach(uint64_t channel_id, Integer width, Integer height, Dictionary options,
-                    Error *err)
+void nvim_ui_attach(uint64_t channel_id, Integer width, Integer height, Dict options, Error *err)
   FUNC_API_SINCE(1) FUNC_API_REMOTE_ONLY
 {
   if (map_has(uint64_t, &connected_uis, channel_id)) {
@@ -191,6 +189,7 @@ void nvim_ui_attach(uint64_t channel_id, Integer width, Integer height, Dictiona
   ui->wildmenu_active = false;
 
   pmap_put(uint64_t)(&connected_uis, channel_id, ui);
+  current_ui = channel_id;
   ui_attach_impl(ui, channel_id);
 
   may_trigger_vim_suspend_resume(false);
@@ -216,6 +215,7 @@ void nvim_ui_set_focus(uint64_t channel_id, Boolean gained, Error *error)
   }
 
   if (gained) {
+    current_ui = channel_id;
     may_trigger_vim_suspend_resume(false);
   }
 
@@ -507,7 +507,11 @@ void nvim_ui_term_event(uint64_t channel_id, String event, Object value, Error *
 
     const String termresponse = value.data.string;
     set_vim_var_string(VV_TERMRESPONSE, termresponse.data, (ptrdiff_t)termresponse.size);
-    apply_autocmds_group(EVENT_TERMRESPONSE, NULL, NULL, false, AUGROUP_ALL, NULL, NULL, &value);
+
+    MAXSIZE_TEMP_DICT(data, 1);
+    PUT_C(data, "sequence", value);
+    apply_autocmds_group(EVENT_TERMRESPONSE, NULL, NULL, true, AUGROUP_ALL, NULL, NULL,
+                         &DICT_OBJ(data));
   }
 }
 
@@ -539,7 +543,7 @@ static void prepare_call(RemoteUI *ui, const char *name)
     ui_alloc_buf(ui);
   }
 
-  // To optimize data transfer(especially for "grid_line"), we bundle adjacent
+  // To optimize data transfer (especially for "grid_line"), we bundle adjacent
   // calls to same method together, so only add a new call entry if the last
   // method call is different from "name"
 
@@ -688,8 +692,8 @@ void remote_ui_hl_attr_define(RemoteUI *ui, Integer id, HlAttrs rgb_attrs, HlAtt
     PUT_C(rgb, "url", CSTR_AS_OBJ(url));
   }
 
-  ADD_C(args, DICTIONARY_OBJ(rgb));
-  ADD_C(args, DICTIONARY_OBJ(cterm));
+  ADD_C(args, DICT_OBJ(rgb));
+  ADD_C(args, DICT_OBJ(cterm));
 
   if (ui->ui_ext[kUIHlState]) {
     ADD_C(args, ARRAY_OBJ(info));
@@ -710,7 +714,7 @@ void remote_ui_highlight_set(RemoteUI *ui, int id)
   MAXSIZE_TEMP_DICT(dict, HLATTRS_DICT_SIZE);
   hlattrs2dict(&dict, NULL, syn_attr2entry(id), ui->rgb, false);
   MAXSIZE_TEMP_ARRAY(args, 1);
-  ADD_C(args, DICTIONARY_OBJ(dict));
+  ADD_C(args, DICT_OBJ(dict));
   push_call(ui, "highlight_set", args);
 }
 
@@ -848,7 +852,7 @@ void remote_ui_raw_line(RemoteUI *ui, Integer grid, Integer row, Integer startco
       char sc_buf[MAX_SCHAR_SIZE];
       schar_get(sc_buf, chunk[i]);
       remote_ui_put(ui, sc_buf);
-      if (utf_ambiguous_width(utf_ptr2char(sc_buf))) {
+      if (utf_ambiguous_width(sc_buf)) {
         ui->client_col = -1;  // force cursor update
       }
     }
@@ -921,11 +925,11 @@ static Array translate_contents(RemoteUI *ui, Array contents, Arena *arena)
     Array new_item = arena_array(arena, 2);
     int attr = (int)item.items[0].data.integer;
     if (attr) {
-      Dictionary rgb_attrs = arena_dict(arena, HLATTRS_DICT_SIZE);
+      Dict rgb_attrs = arena_dict(arena, HLATTRS_DICT_SIZE);
       hlattrs2dict(&rgb_attrs, NULL, syn_attr2entry(attr), ui->rgb, false);
-      ADD_C(new_item, DICTIONARY_OBJ(rgb_attrs));
+      ADD_C(new_item, DICT_OBJ(rgb_attrs));
     } else {
-      ADD_C(new_item, DICTIONARY_OBJ((Dictionary)ARRAY_DICT_INIT));
+      ADD_C(new_item, DICT_OBJ((Dict)ARRAY_DICT_INIT));
     }
     ADD_C(new_item, item.items[1]);
     ADD_C(new_contents, ARRAY_OBJ(new_item));

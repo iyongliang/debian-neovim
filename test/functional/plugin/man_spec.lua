@@ -3,12 +3,12 @@ local n = require('test.functional.testnvim')()
 local Screen = require('test.functional.ui.screen')
 
 local command, feed = n.command, n.feed
+local dedent = t.dedent
 local clear = n.clear
 local exec_lua = n.exec_lua
 local fn = n.fn
 local nvim_prog = n.nvim_prog
 local matches = t.matches
-local write_file = t.write_file
 local tmpname = t.tmpname
 local eq = t.eq
 local pesc = vim.pesc
@@ -17,21 +17,19 @@ local is_ci = t.is_ci
 
 -- Collects all names passed to find_path() after attempting ":Man foo".
 local function get_search_history(name)
-  local args = vim.split(name, ' ')
-  local code = [[
-    local args = ...
+  return exec_lua(function()
+    local args = vim.split(name, ' ')
     local man = require('man')
     local res = {}
-    man.find_path = function(sect, name)
-      table.insert(res, {sect, name})
+    --- @diagnostic disable-next-line:duplicate-set-field
+    man._find_path = function(name0, sect)
+      table.insert(res, { sect, name0 })
       return nil
     end
-    local ok, rv = pcall(man.open_page, -1, {tab = 0}, args)
-    assert(not ok)
-    assert(rv and rv:match('no manual entry'))
+    local err = man.open_page(-1, { tab = 0 }, args)
+    assert(err and err:match('no manual entry'))
     return res
-  ]]
-  return exec_lua(code, args)
+  end)
 end
 
 clear()
@@ -62,14 +60,15 @@ describe(':Man', function()
         c = { foreground = Screen.colors.Blue }, -- control chars
         eob = { bold = true, foreground = Screen.colors.Blue }, -- empty line '~'s
       })
-      screen:attach()
     end)
 
     it('clears backspaces from text and adds highlights', function()
       feed(
-        [[
+        dedent(
+          [[
         ithis i<C-v><C-h>is<C-v><C-h>s a<C-v><C-h>a test
         with _<C-v><C-h>o_<C-v><C-h>v_<C-v><C-h>e_<C-v><C-h>r_<C-v><C-h>s_<C-v><C-h>t_<C-v><C-h>r_<C-v><C-h>u_<C-v><C-h>c_<C-v><C-h>k text<ESC>]]
+        )
       )
 
       screen:expect {
@@ -93,9 +92,11 @@ describe(':Man', function()
 
     it('clears escape sequences from text and adds highlights', function()
       feed(
-        [[
+        dedent(
+          [[
         ithis <C-v><ESC>[1mis <C-v><ESC>[3ma <C-v><ESC>[4mtest<C-v><ESC>[0m
         <C-v><ESC>[4mwith<C-v><ESC>[24m <C-v><ESC>[4mescaped<C-v><ESC>[24m <C-v><ESC>[4mtext<C-v><ESC>[24m<ESC>]]
+        )
       )
 
       screen:expect {
@@ -117,11 +118,38 @@ describe(':Man', function()
       ]])
     end)
 
+    it('clears OSC 8 hyperlink markup from text', function()
+      feed(
+        dedent(
+          [[
+        ithis <C-v><ESC>]8;;http://example.com<C-v><ESC>\Link Title<C-v><ESC>]8;;<C-v><ESC>\<ESC>]]
+        )
+      )
+
+      screen:expect {
+        grid = [=[
+        this {c:^[}]8;;http://example.com{c:^[}\Link Title{c:^[}]8;;{c:^[}^\ |
+        {eob:~                                                   }|*3
+                                                            |
+      ]=],
+      }
+
+      exec_lua [[require'man'.init_pager()]]
+
+      screen:expect([[
+      ^this Link Title                                     |
+      {eob:~                                                   }|*3
+                                                          |
+      ]])
+    end)
+
     it('highlights multibyte text', function()
       feed(
-        [[
+        dedent(
+          [[
         ithis i<C-v><C-h>is<C-v><C-h>s あ<C-v><C-h>あ test
         with _<C-v><C-h>ö_<C-v><C-h>v_<C-v><C-h>e_<C-v><C-h>r_<C-v><C-h>s_<C-v><C-h>t_<C-v><C-h>r_<C-v><C-h>u_<C-v><C-h>̃_<C-v><C-h>c_<C-v><C-h>k te<C-v><ESC>[3mxt¶<C-v><ESC>[0m<ESC>]]
+        )
       )
       exec_lua [[require'man'.init_pager()]]
 
@@ -135,10 +163,12 @@ describe(':Man', function()
 
     it('highlights underscores based on context', function()
       feed(
-        [[
+        dedent(
+          [[
         i_<C-v><C-h>_b<C-v><C-h>be<C-v><C-h>eg<C-v><C-h>gi<C-v><C-h>in<C-v><C-h>ns<C-v><C-h>s
         m<C-v><C-h>mi<C-v><C-h>id<C-v><C-h>d_<C-v><C-h>_d<C-v><C-h>dl<C-v><C-h>le<C-v><C-h>e
         _<C-v><C-h>m_<C-v><C-h>i_<C-v><C-h>d_<C-v><C-h>__<C-v><C-h>d_<C-v><C-h>l_<C-v><C-h>e<ESC>]]
+        )
       )
       exec_lua [[require'man'.init_pager()]]
 
@@ -152,10 +182,10 @@ describe(':Man', function()
     end)
 
     it('highlights various bullet formats', function()
-      feed([[
+      feed(dedent([[
         i· ·<C-v><C-h>·
         +<C-v><C-h>o
-        +<C-v><C-h>+<C-v><C-h>o<C-v><C-h>o double<ESC>]])
+        +<C-v><C-h>+<C-v><C-h>o<C-v><C-h>o double<ESC>]]))
       exec_lua [[require'man'.init_pager()]]
 
       screen:expect([[
@@ -168,11 +198,11 @@ describe(':Man', function()
     end)
 
     it('handles : characters in input', function()
-      feed([[
+      feed(dedent([[
         i<C-v><C-[>[40m    0  <C-v><C-[>[41m    1  <C-v><C-[>[42m    2  <C-v><C-[>[43m    3
         <C-v><C-[>[44m    4  <C-v><C-[>[45m    5  <C-v><C-[>[46m    6  <C-v><C-[>[47m    7  <C-v><C-[>[100m    8  <C-v><C-[>[101m    9
         <C-v><C-[>[102m   10  <C-v><C-[>[103m   11  <C-v><C-[>[104m   12  <C-v><C-[>[105m   13  <C-v><C-[>[106m   14  <C-v><C-[>[107m   15
-        <C-v><C-[>[48:5:16m   16  <ESC>]])
+        <C-v><C-[>[48:5:16m   16  <ESC>]]))
       exec_lua [[require'man'.init_pager()]]
 
       screen:expect([[
@@ -203,10 +233,9 @@ describe(':Man', function()
     local actual_file = tmpname()
     -- actual_file must be an absolute path to an existent file for us to test against it
     matches('^/.+', actual_file)
-    write_file(actual_file, '')
     local args = { nvim_prog, '--headless', '+:Man ' .. actual_file, '+q' }
     matches(
-      ('Error detected while processing command line:\r\n' .. 'man.lua: "no manual entry for %s"'):format(
+      ('Error detected while processing command line:\r\n' .. 'man.lua: no manual entry for %s'):format(
         pesc(actual_file)
       ),
       fn.system(args, { '' })
@@ -216,8 +245,8 @@ describe(':Man', function()
 
   it('tries variants with spaces, underscores #22503', function()
     eq({
-      { '', 'NAME WITH SPACES' },
-      { '', 'NAME_WITH_SPACES' },
+      { vim.NIL, 'NAME WITH SPACES' },
+      { vim.NIL, 'NAME_WITH_SPACES' },
     }, get_search_history('NAME WITH SPACES'))
     eq({
       { '3', 'some other man' },
@@ -236,12 +265,21 @@ describe(':Man', function()
       { 'n', 'some_other_man' },
     }, get_search_history('n some other man'))
     eq({
-      { '', '123some other man' },
-      { '', '123some_other_man' },
+      { vim.NIL, '123some other man' },
+      { vim.NIL, '123some_other_man' },
     }, get_search_history('123some other man'))
     eq({
       { '1', 'other_man' },
       { '1', 'other_man' },
     }, get_search_history('other_man(1)'))
+  end)
+
+  it('can complete', function()
+    eq(
+      true,
+      exec_lua(function()
+        return #require('man').man_complete('f', 'Man f') > 0
+      end)
+    )
   end)
 end)

@@ -98,6 +98,11 @@ func Test_err_teapot()
   call assert_fails('call err_teapot(expr)', "E503: Coffee is currently not available")
 endfunc
 
+func Test_islocked()
+  call assert_fails('call islocked(99)', 'E475:')
+  call assert_fails('call islocked("s: x")', 'E488:')
+endfunc
+
 func Test_len()
   call assert_equal(1, len(0))
   call assert_equal(2, len(12))
@@ -378,6 +383,12 @@ func Test_simplify()
   call assert_equal('/',           simplify('/.'))
   call assert_equal('/',           simplify('/..'))
   call assert_equal('/...',        simplify('/...'))
+  call assert_equal('//path',      simplify('//path'))
+  if has('unix')
+    call assert_equal('/path',       simplify('///path'))
+    call assert_equal('/path',       simplify('////path'))
+  endif
+
   call assert_equal('./dir/file',  './dir/file'->simplify())
   call assert_equal('./dir/file',  simplify('.///dir//file'))
   call assert_equal('./dir/file',  simplify('./dir/./file'))
@@ -804,6 +815,10 @@ func Test_mode()
   call assert_equal('c-cv', g:current_modes)
   call feedkeys("gQ\<Insert>\<F2>vi\<CR>", 'xt')
   call assert_equal("c-cvr", g:current_modes)
+
+  " Commandline mode in Visual mode should return "c-c", never "v-v".
+  call feedkeys("v\<Cmd>call input('')\<CR>\<F2>\<CR>\<Esc>", 'xt')
+  call assert_equal("c-c", g:current_modes)
 
   " Executing commands in Vim Ex mode should return "cv", never "cvr",
   " as Cmdline editing has already ended.
@@ -2056,10 +2071,26 @@ func Test_input_func()
 
   call assert_fails("call input('F:', '', 'invalid')", 'E180:')
   call assert_fails("call input('F:', '', [])", 'E730:')
+
+  " Test for using "command" as the completion function
+  call feedkeys(":let c = input('Command? ', '', 'command')\<CR>"
+        \ .. "echo bufnam\<C-A>\<CR>", 'xt')
+  call assert_equal('echo bufname(', c)
+
+  " Test for using "shellcmdline" as the completion function
+  call feedkeys(":let c = input('Shell? ', '', 'shellcmdline')\<CR>"
+        \ .. "vim test_functions.\<C-A>\<CR>", 'xt')
+  call assert_equal('vim test_functions.vim', c)
+  if executable('whoami')
+    call feedkeys(":let c = input('Shell? ', '', 'shellcmdline')\<CR>"
+          \ .. "whoam\<C-A>\<CR>", 'xt')
+    call assert_match('\<whoami\>', c)
+  endif
 endfunc
 
 " Test for the inputdialog() function
 func Test_inputdialog()
+  set timeout timeoutlen=10
   if has('gui_running')
     call assert_fails('let v=inputdialog([], "xx")', 'E730:')
     call assert_fails('let v=inputdialog("Q", [])', 'E730:')
@@ -2069,6 +2100,7 @@ func Test_inputdialog()
     call feedkeys(":let v=inputdialog('Q:', 'xx', 'yy')\<CR>\<Esc>", 'xt')
     call assert_equal('yy', v)
   endif
+  set timeout& timeoutlen&
 endfunc
 
 " Test for inputlist()
@@ -2136,54 +2168,6 @@ func Test_balloon_show()
     call balloon_show(range(3))
     call balloon_show([])
   endif
-endfunc
-
-func Test_shellescape()
-  let save_shell = &shell
-  set shell=bash
-  call assert_equal("'text'", shellescape('text'))
-  call assert_equal("'te\"xt'", 'te"xt'->shellescape())
-  call assert_equal("'te'\\''xt'", shellescape("te'xt"))
-
-  call assert_equal("'te%xt'", shellescape("te%xt"))
-  call assert_equal("'te\\%xt'", shellescape("te%xt", 1))
-  call assert_equal("'te#xt'", shellescape("te#xt"))
-  call assert_equal("'te\\#xt'", shellescape("te#xt", 1))
-  call assert_equal("'te!xt'", shellescape("te!xt"))
-  call assert_equal("'te\\!xt'", shellescape("te!xt", 1))
-
-  call assert_equal("'te\nxt'", shellescape("te\nxt"))
-  call assert_equal("'te\\\nxt'", shellescape("te\nxt", 1))
-  set shell=tcsh
-  call assert_equal("'te\\!xt'", shellescape("te!xt"))
-  call assert_equal("'te\\\\!xt'", shellescape("te!xt", 1))
-  call assert_equal("'te\\\nxt'", shellescape("te\nxt"))
-  call assert_equal("'te\\\\\nxt'", shellescape("te\nxt", 1))
-
-  set shell=fish
-  call assert_equal("'text'", shellescape('text'))
-  call assert_equal("'te\"xt'", shellescape('te"xt'))
-  call assert_equal("'te'\\''xt'", shellescape("te'xt"))
-
-  call assert_equal("'te%xt'", shellescape("te%xt"))
-  call assert_equal("'te\\%xt'", shellescape("te%xt", 1))
-  call assert_equal("'te#xt'", shellescape("te#xt"))
-  call assert_equal("'te\\#xt'", shellescape("te#xt", 1))
-  call assert_equal("'te!xt'", shellescape("te!xt"))
-  call assert_equal("'te\\!xt'", shellescape("te!xt", 1))
-
-  call assert_equal("'te\\\\xt'", shellescape("te\\xt"))
-  call assert_equal("'te\\\\xt'", shellescape("te\\xt", 1))
-  call assert_equal("'te\\\\'\\''xt'", shellescape("te\\'xt"))
-  call assert_equal("'te\\\\'\\''xt'", shellescape("te\\'xt", 1))
-  call assert_equal("'te\\\\!xt'", shellescape("te\\!xt"))
-  call assert_equal("'te\\\\\\!xt'", shellescape("te\\!xt", 1))
-  call assert_equal("'te\\\\%xt'", shellescape("te\\%xt"))
-  call assert_equal("'te\\\\\\%xt'", shellescape("te\\%xt", 1))
-  call assert_equal("'te\\\\#xt'", shellescape("te\\#xt"))
-  call assert_equal("'te\\\\\\#xt'", shellescape("te\\#xt", 1))
-
-  let &shell = save_shell
 endfunc
 
 func Test_setbufvar_options()
@@ -2421,6 +2405,85 @@ func Test_getchar()
   call assert_equal("\<M-F2>", getchar(0))
   call assert_equal(0, getchar(0))
 
+  call feedkeys("\<Tab>", '')
+  call assert_equal(char2nr("\<Tab>"), getchar())
+  call feedkeys("\<Tab>", '')
+  call assert_equal(char2nr("\<Tab>"), getchar(-1))
+  call feedkeys("\<Tab>", '')
+  call assert_equal(char2nr("\<Tab>"), getchar(-1, {}))
+  call feedkeys("\<Tab>", '')
+  call assert_equal(char2nr("\<Tab>"), getchar(-1, #{number: v:true}))
+  call assert_equal(0, getchar(0))
+  call assert_equal(0, getchar(1))
+  call assert_equal(0, getchar(0, #{number: v:true}))
+  call assert_equal(0, getchar(1, #{number: v:true}))
+
+  call feedkeys("\<Tab>", '')
+  call assert_equal("\<Tab>", getcharstr())
+  call feedkeys("\<Tab>", '')
+  call assert_equal("\<Tab>", getcharstr(-1))
+  call feedkeys("\<Tab>", '')
+  call assert_equal("\<Tab>", getcharstr(-1, {}))
+  call feedkeys("\<Tab>", '')
+  call assert_equal("\<Tab>", getchar(-1, #{number: v:false}))
+  call assert_equal('', getcharstr(0))
+  call assert_equal('', getcharstr(1))
+  call assert_equal('', getchar(0, #{number: v:false}))
+  call assert_equal('', getchar(1, #{number: v:false}))
+
+  " Nvim: <M-x> is never simplified
+  " for key in ["C-I", "C-X", "M-x"]
+  for key in ["C-I", "C-X"]
+    let lines =<< eval trim END
+      call feedkeys("\<*{key}>", '')
+      call assert_equal(char2nr("\<{key}>"), getchar())
+      call feedkeys("\<*{key}>", '')
+      call assert_equal(char2nr("\<{key}>"), getchar(-1))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal(char2nr("\<{key}>"), getchar(-1, {{}}))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal(char2nr("\<{key}>"), getchar(-1, {{'number': 1}}))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal(char2nr("\<{key}>"), getchar(-1, {{'simplify': 1}}))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal("\<*{key}>", getchar(-1, {{'simplify': v:false}}))
+      call assert_equal(0, getchar(0))
+      call assert_equal(0, getchar(1))
+    END
+    call CheckLegacyAndVim9Success(lines)
+
+    let lines =<< eval trim END
+      call feedkeys("\<*{key}>", '')
+      call assert_equal("\<{key}>", getcharstr())
+      call feedkeys("\<*{key}>", '')
+      call assert_equal("\<{key}>", getcharstr(-1))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal("\<{key}>", getcharstr(-1, {{}}))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal("\<{key}>", getchar(-1, {{'number': 0}}))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal("\<{key}>", getcharstr(-1, {{'simplify': 1}}))
+      call feedkeys("\<*{key}>", '')
+      call assert_equal("\<*{key}>", getcharstr(-1, {{'simplify': v:false}}))
+      call assert_equal('', getcharstr(0))
+      call assert_equal('', getcharstr(1))
+    END
+    call CheckLegacyAndVim9Success(lines)
+  endfor
+
+  call assert_fails('call getchar(1, 1)', 'E1206:')
+  call assert_fails('call getcharstr(1, 1)', 'E1206:')
+  call assert_fails('call getchar(1, #{cursor: "foo"})', 'E475:')
+  call assert_fails('call getcharstr(1, #{cursor: "foo"})', 'E475:')
+  call assert_fails('call getchar(1, #{cursor: 0z})', 'E976:')
+  call assert_fails('call getcharstr(1, #{cursor: 0z})', 'E976:')
+  call assert_fails('call getchar(1, #{simplify: 0z})', 'E974:')
+  call assert_fails('call getcharstr(1, #{simplify: 0z})', 'E974:')
+  call assert_fails('call getchar(1, #{number: []})', 'E745:')
+  call assert_fails('call getchar(1, #{number: {}})', 'E728:')
+  call assert_fails('call getcharstr(1, #{number: v:true})', 'E475:')
+  call assert_fails('call getcharstr(1, #{number: v:false})', 'E475:')
+
   call setline(1, 'xxxx')
   call Ntest_setmouse(1, 3)
   let v:mouse_win = 9
@@ -2436,10 +2499,59 @@ func Test_getchar()
   enew!
 endfunc
 
+func Test_getchar_cursor_position()
+  CheckRunVimInTerminal
+
+  let lines =<< trim END
+    call setline(1, ['foobar', 'foobar', 'foobar'])
+    call cursor(3, 6)
+    nnoremap <F1> <Cmd>echo 1234<Bar>call getchar()<CR>
+    nnoremap <F2> <Cmd>call getchar()<CR>
+    nnoremap <F3> <Cmd>call getchar(-1, {})<CR>
+    nnoremap <F4> <Cmd>call getchar(-1, #{cursor: 'msg'})<CR>
+    nnoremap <F5> <Cmd>call getchar(-1, #{cursor: 'keep'})<CR>
+    nnoremap <F6> <Cmd>call getchar(-1, #{cursor: 'hide'})<CR>
+  END
+  call writefile(lines, 'XgetcharCursorPos', 'D')
+  let buf = RunVimInTerminal('-S XgetcharCursorPos', {'rows': 6})
+  call WaitForAssert({-> assert_equal([3, 6], term_getcursor(buf)[0:1])})
+
+  call term_sendkeys(buf, "\<F1>")
+  call WaitForAssert({-> assert_equal([6, 5], term_getcursor(buf)[0:1])})
+  call assert_true(term_getcursor(buf)[2].visible)
+  call term_sendkeys(buf, 'a')
+  call WaitForAssert({-> assert_equal([3, 6], term_getcursor(buf)[0:1])})
+  call assert_true(term_getcursor(buf)[2].visible)
+
+  for key in ["\<F2>", "\<F3>", "\<F4>"]
+    call term_sendkeys(buf, key)
+    call WaitForAssert({-> assert_equal([6, 1], term_getcursor(buf)[0:1])})
+    call assert_true(term_getcursor(buf)[2].visible)
+    call term_sendkeys(buf, 'a')
+    call WaitForAssert({-> assert_equal([3, 6], term_getcursor(buf)[0:1])})
+    call assert_true(term_getcursor(buf)[2].visible)
+  endfor
+
+  call term_sendkeys(buf, "\<F5>")
+  call TermWait(buf, 50)
+  call assert_equal([3, 6], term_getcursor(buf)[0:1])
+  call assert_true(term_getcursor(buf)[2].visible)
+  call term_sendkeys(buf, 'a')
+  call TermWait(buf, 50)
+  call assert_equal([3, 6], term_getcursor(buf)[0:1])
+  call assert_true(term_getcursor(buf)[2].visible)
+
+  call term_sendkeys(buf, "\<F6>")
+  call WaitForAssert({-> assert_false(term_getcursor(buf)[2].visible)})
+  call term_sendkeys(buf, 'a')
+  call WaitForAssert({-> assert_true(term_getcursor(buf)[2].visible)})
+  call assert_equal([3, 6], term_getcursor(buf)[0:1])
+
+  call StopVimInTerminal(buf)
+endfunc
+
 func Test_libcall_libcallnr()
-  if !has('libcall')
-    return
-  endif
+  CheckFeature libcall
 
   if has('win32')
     let libc = 'msvcrt.dll'
@@ -2558,36 +2670,6 @@ func Test_func_exists_on_reload()
   delfunc ExistingFunction
 endfunc
 
-func Test_platform_name()
-  " The system matches at most only one name.
-  let names = ['amiga', 'beos', 'bsd', 'hpux', 'linux', 'mac', 'qnx', 'sun', 'vms', 'win32', 'win32unix']
-  call assert_inrange(0, 1, len(filter(copy(names), 'has(v:val)')))
-
-  " Is Unix?
-  call assert_equal(has('beos'), has('beos') && has('unix'))
-  call assert_equal(has('bsd'), has('bsd') && has('unix'))
-  call assert_equal(has('hpux'), has('hpux') && has('unix'))
-  call assert_equal(has('linux'), has('linux') && has('unix'))
-  call assert_equal(has('mac'), has('mac') && has('unix'))
-  call assert_equal(has('qnx'), has('qnx') && has('unix'))
-  call assert_equal(has('sun'), has('sun') && has('unix'))
-  call assert_equal(has('win32'), has('win32') && !has('unix'))
-  call assert_equal(has('win32unix'), has('win32unix') && has('unix'))
-
-  if has('unix') && executable('uname')
-    let uname = system('uname')
-    call assert_equal(uname =~? 'BeOS', has('beos'))
-    " GNU userland on BSD kernels (e.g., GNU/kFreeBSD) don't have BSD defined
-    call assert_equal(uname =~? '\%(GNU/k\w\+\)\@<!BSD\|DragonFly', has('bsd'))
-    call assert_equal(uname =~? 'HP-UX', has('hpux'))
-    call assert_equal(uname =~? 'Linux', has('linux'))
-    call assert_equal(uname =~? 'Darwin', has('mac'))
-    call assert_equal(uname =~? 'QNX', has('qnx'))
-    call assert_equal(uname =~? 'SunOS', has('sun'))
-    call assert_equal(uname =~? 'CYGWIN\|MSYS', has('win32unix'))
-  endif
-endfunc
-
 " Test confirm({msg} [, {choices} [, {default} [, {type}]]])
 func Test_confirm()
   CheckUnix
@@ -2640,6 +2722,36 @@ func Test_confirm()
   call assert_fails('call confirm("Are you sure?", [])', 'E730:')
   call assert_fails('call confirm("Are you sure?", "&Yes\n&No\n", [])', 'E745:')
   call assert_fails('call confirm("Are you sure?", "&Yes\n&No\n", 0, [])', 'E730:')
+endfunc
+
+func Test_platform_name()
+  " The system matches at most only one name.
+  let names = ['amiga', 'bsd', 'hpux', 'linux', 'mac', 'qnx', 'sun', 'vms', 'win32', 'win32unix']
+  call assert_inrange(0, 1, len(filter(copy(names), 'has(v:val)')))
+
+  " Is Unix?
+  call assert_equal(has('bsd'), has('bsd') && has('unix'))
+  call assert_equal(has('hpux'), has('hpux') && has('unix'))
+  call assert_equal(has('hurd'), has('hurd') && has('unix'))
+  call assert_equal(has('linux'), has('linux') && has('unix'))
+  call assert_equal(has('mac'), has('mac') && has('unix'))
+  call assert_equal(has('qnx'), has('qnx') && has('unix'))
+  call assert_equal(has('sun'), has('sun') && has('unix'))
+  call assert_equal(has('win32'), has('win32') && !has('unix'))
+  call assert_equal(has('win32unix'), has('win32unix') && has('unix'))
+
+  if has('unix') && executable('uname')
+    let uname = system('uname')
+    " GNU userland on BSD kernels (e.g., GNU/kFreeBSD) don't have BSD defined
+    call assert_equal(uname =~? '\%(GNU/k\w\+\)\@<!BSD\|DragonFly', has('bsd'))
+    call assert_equal(uname =~? 'HP-UX', has('hpux'))
+    call assert_equal(uname =~? 'Linux', has('linux'))
+    call assert_equal(uname =~? 'Darwin', has('mac'))
+    call assert_equal(uname =~? 'QNX', has('qnx'))
+    call assert_equal(uname =~? 'SunOS', has('sun'))
+    call assert_equal(uname =~? 'CYGWIN\|MSYS', has('win32unix'))
+    call assert_equal(uname =~? 'GNU', has('hurd'))
+  endif
 endfunc
 
 func Test_readdir()
@@ -2703,7 +2815,9 @@ endfunc
 func Test_call()
   call assert_equal(3, call('len', [123]))
   call assert_equal(3, 'len'->call([123]))
-  call assert_fails("call call('len', 123)", 'E714:')
+  call assert_equal(4, call({ x -> len(x) }, ['xxxx']))
+  call assert_equal(2, call(function('len'), ['xx']))
+  call assert_fails("call call('len', 123)", 'E1211:')
   call assert_equal(0, call('', []))
   call assert_equal(0, call('len', v:_null_list))
 
@@ -3128,7 +3242,7 @@ func Test_range()
     call assert_fails('call term_start(range(3, 4))', 'E474:')
     let g:terminal_ansi_colors = range(16)
     if has('win32')
-      let cmd = "cmd /c dir"
+      let cmd = "cmd /D /c dir"
     else
       let cmd = "ls"
     endif
@@ -3491,6 +3605,56 @@ func Test_glob()
   call assert_fails("call glob('*', 0, {})", 'E728:')
 endfunc
 
+func Test_glob2()
+  call mkdir('[XglobDir]', 'R')
+  call mkdir('abc[glob]def', 'R')
+
+  call writefile(['glob'], '[XglobDir]/Xglob')
+  call writefile(['glob'], 'abc[glob]def/Xglob')
+  if has("unix")
+    call assert_equal([], (glob('[XglobDir]/*', 0, 1)))
+    call assert_equal([], (glob('abc[glob]def/*', 0, 1)))
+    call assert_equal(['[XglobDir]/Xglob'], (glob('\[XglobDir]/*', 0, 1)))
+    call assert_equal(['abc[glob]def/Xglob'], (glob('abc\[glob]def/*', 0, 1)))
+  elseif has("win32")
+    let _sl=&shellslash
+    call assert_equal([], (glob('[XglobDir]\*', 0, 1)))
+    call assert_equal([], (glob('abc[glob]def\*', 0, 1)))
+    call assert_equal([], (glob('\[XglobDir]\*', 0, 1)))
+    call assert_equal([], (glob('abc\[glob]def\*', 0, 1)))
+    set noshellslash
+    call assert_equal(['[XglobDir]\Xglob'], (glob('[[]XglobDir]/*', 0, 1)))
+    call assert_equal(['abc[glob]def\Xglob'], (glob('abc[[]glob]def/*', 0, 1)))
+    set shellslash
+    call assert_equal(['[XglobDir]/Xglob'], (glob('[[]XglobDir]/*', 0, 1)))
+    call assert_equal(['abc[glob]def/Xglob'], (glob('abc[[]glob]def/*', 0, 1)))
+    let &shellslash=_sl
+  endif
+endfunc
+
+func Test_glob_symlinks()
+  call writefile([], 'Xglob1')
+
+  if has("win32")
+    silent !mklink XglobBad DoesNotExist
+    if v:shell_error
+      throw 'Skipped: cannot create symlinks'
+    endif
+    silent !mklink XglobOk Xglob1
+  else
+    silent !ln -s DoesNotExist XglobBad
+    silent !ln -s Xglob1 XglobOk
+  endif
+
+  " The broken symlink is excluded when alllinks is false.
+  call assert_equal(['Xglob1', 'XglobBad', 'XglobOk'], sort(glob('Xglob*', 0, 1, 1)))
+  call assert_equal(['Xglob1', 'XglobOk'], sort(glob('Xglob*', 0, 1, 0)))
+
+  call delete('Xglob1')
+  call delete('XglobBad')
+  call delete('XglobOk')
+endfunc
+
 " Test for browse()
 func Test_browse()
   CheckFeature browse
@@ -3552,6 +3716,42 @@ func Test_builtin_check()
   unlet bar
 endfunc
 
+" Test for isabsolutepath()
+func Test_isabsolutepath()
+  call assert_false(isabsolutepath(''))
+  call assert_false(isabsolutepath('.'))
+  call assert_false(isabsolutepath('../Foo'))
+  call assert_false(isabsolutepath('Foo/'))
+  if has('win32')
+    call assert_true(isabsolutepath('A:\'))
+    call assert_true(isabsolutepath('A:\Foo'))
+    call assert_true(isabsolutepath('A:/Foo'))
+    call assert_false(isabsolutepath('A:Foo'))
+    call assert_false(isabsolutepath('\Windows'))
+    call assert_true(isabsolutepath('\\Server2\Share\Test\Foo.txt'))
+  else
+    call assert_true(isabsolutepath('/'))
+    call assert_true(isabsolutepath('/usr/share/'))
+  endif
+endfunc
+
+" Test for exepath()
+func Test_exepath()
+  if has('win32')
+    call assert_notequal(exepath('cmd'), '')
+
+    let oldNoDefaultCurrentDirectoryInExePath = $NoDefaultCurrentDirectoryInExePath
+    call writefile(['@echo off', 'echo Evil'], 'vim-test-evil.bat')
+    let $NoDefaultCurrentDirectoryInExePath = ''
+    call assert_notequal(exepath("vim-test-evil.bat"), '')
+    let $NoDefaultCurrentDirectoryInExePath = '1'
+    call assert_equal(exepath("vim-test-evil.bat"), '')
+    let $NoDefaultCurrentDirectoryInExePath = oldNoDefaultCurrentDirectoryInExePath
+    call delete('vim-test-evil.bat')
+  else
+    call assert_notequal(exepath('sh'), '')
+  endif
+endfunc
 
 " Test for virtcol()
 func Test_virtcol()
@@ -3616,7 +3816,7 @@ func Test_string_reverse()
     call assert_equal('', reverse(v:_null_string))
     for [s1, s2] in [['', ''], ['a', 'a'], ['ab', 'ba'], ['abc', 'cba'],
                    \ ['abcd', 'dcba'], ['«-«-»-»', '»-»-«-«'],
-                   \ ['🇦', '🇦'], ['🇦🇧', '🇧🇦'], ['🇦🇧🇨', '🇨🇧🇦'],
+                   \ ['🇦', '🇦'], ['🇦🇧', '🇦🇧'], ['🇦🇧🇨', '🇨🇦🇧'],
                    \ ['🇦«🇧-🇨»🇩', '🇩»🇨-🇧«🇦']]
       call assert_equal(s2, reverse(s1))
     endfor
@@ -3724,6 +3924,8 @@ func Test_slice()
     call assert_equal('', 'ὰ̳β̳́γ̳̂δ̳̃ε̳̄ζ̳̅'->slice(1, -6))
   END
   call CheckLegacyAndVim9Success(lines)
+
+  call assert_equal(0, slice(v:true, 1))
 endfunc
 
 " vim: shiftwidth=2 sts=2 expandtab

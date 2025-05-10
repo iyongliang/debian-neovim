@@ -789,15 +789,19 @@ function tests.code_action_with_resolve()
     end,
     body = function()
       notify('start')
-      local cmd = {
-        title = 'Command 1',
-        command = 'dummy1',
-      }
+      local cmd = { title = 'Action 1' }
       expect_request('textDocument/codeAction', function()
         return nil, { cmd }
       end)
       expect_request('codeAction/resolve', function()
-        return nil, cmd
+        return nil,
+          {
+            title = 'Action 1',
+            command = {
+              title = 'Command 1',
+              command = 'dummy1',
+            },
+          }
       end)
       notify('shutdown')
     end,
@@ -947,6 +951,48 @@ function tests.basic_formatting()
     body = function()
       notify('start')
       expect_request('textDocument/formatting', function()
+        return nil, {}
+      end)
+      notify('shutdown')
+    end,
+  }
+end
+
+function tests.range_formatting()
+  skeleton {
+    on_init = function()
+      return {
+        capabilities = {
+          documentFormattingProvider = true,
+          documentRangeFormattingProvider = true,
+        },
+      }
+    end,
+    body = function()
+      notify('start')
+      expect_request('textDocument/rangeFormatting', function()
+        return nil, {}
+      end)
+      notify('shutdown')
+    end,
+  }
+end
+
+function tests.ranges_formatting()
+  skeleton {
+    on_init = function()
+      return {
+        capabilities = {
+          documentFormattingProvider = true,
+          documentRangeFormattingProvider = {
+            rangesSupport = true,
+          },
+        },
+      }
+    end,
+    body = function()
+      notify('start')
+      expect_request('textDocument/rangesFormatting', function()
         return nil, {}
       end)
       notify('shutdown')

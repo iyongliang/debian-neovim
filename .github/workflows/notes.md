@@ -18,6 +18,8 @@ ${NVIM_VERSION}
 2. Run the MSI
 3. Run `nvim.exe` on your CLI of choice
 
+Note: On Windows "Server" you may need to [install vcruntime140.dll](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170).
+
 ### macOS (x86_64)
 
 1. Download **nvim-macos-x86_64.tar.gz**
@@ -34,9 +36,7 @@ ${NVIM_VERSION}
 
 ### Linux (x86_64)
 
-Minimum glibc version to run these releases is 2.31. People requiring releases
-that work on older glibc versions can find them at
-https://github.com/neovim/neovim-releases.
+If your system does not have the [required glibc version](https://neovim.io/doc/user/support.html#supported-platforms), try the (unsupported) [builds for older glibc](https://github.com/neovim/neovim-releases).
 
 #### AppImage
 
@@ -54,7 +54,7 @@ https://github.com/neovim/neovim-releases.
 2. Extract: `tar xzvf nvim-linux-x86_64.tar.gz`
 3. Run `./nvim-linux-x86_64/bin/nvim`
 
-### Linux (arm64)
+### Linux (arm64) - Untested
 
 #### AppImage
 
@@ -77,16 +77,3 @@ https://github.com/neovim/neovim-releases.
 - Install by [package manager](https://github.com/neovim/neovim/blob/master/INSTALL.md#install-from-package)
 
 ## SHA256 Checksums
-
-```
-${SHA_APPIMAGE_ARM64}
-${SHA_APPIMAGE_ARM64_ZSYNC}
-${SHA_LINUX_ARM64_TAR}
-${SHA_APPIMAGE_X86_64}
-${SHA_APPIMAGE_X86_64_ZSYNC}
-${SHA_LINUX_X86_64_TAR}
-${SHA_MACOS_ARM64}
-${SHA_MACOS_X86_64}
-${SHA_WIN_64_MSI}
-${SHA_WIN_64_ZIP}
-```

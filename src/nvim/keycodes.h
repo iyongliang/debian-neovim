@@ -352,6 +352,8 @@ enum key_extra {
 
 #define K_HELP          TERMCAP2KEY('%', '1')
 #define K_UNDO          TERMCAP2KEY('&', '8')
+#define K_FIND          TERMCAP2KEY('@', '0')   // DEC key, often used as Home
+#define K_KSELECT       TERMCAP2KEY('*', '6')   // DEC key, often used as End
 
 #define K_BS            TERMCAP2KEY('k', 'b')
 
@@ -379,6 +381,10 @@ enum key_extra {
 #define K_KMULTIPLY     TERMCAP2KEY('K', '9')   // keypad *
 #define K_KENTER        TERMCAP2KEY('K', 'A')   // keypad Enter
 #define K_KPOINT        TERMCAP2KEY('K', 'B')   // keypad . or ,
+
+// Delimits pasted text (to repeat nvim_paste). Internal-only, not sent by UIs.
+#define K_PASTE_START   TERMCAP2KEY('P', 'S')   // paste start
+#define K_PASTE_END     TERMCAP2KEY('P', 'E')   // paste end
 
 #define K_K0            TERMCAP2KEY('K', 'C')   // keypad 0
 #define K_K1            TERMCAP2KEY('K', 'D')   // keypad 1

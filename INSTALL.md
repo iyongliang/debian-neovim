@@ -108,20 +108,20 @@ For arm64:
 The [Releases](https://github.com/neovim/neovim/releases) page provides pre-built binaries for Linux systems.
 
 ```sh
-curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux64.tar.gz
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
 sudo rm -rf /opt/nvim
-sudo tar -C /opt -xzf nvim-linux64.tar.gz
+sudo tar -C /opt -xzf nvim-linux-x86_64.tar.gz
 ```
 
-After this step add this to `~/.bashrc`:
+Then add this to your shell config (`~/.bashrc`, `~/.zshrc`, ...):
 
-    export PATH="$PATH:/opt/nvim-linux64/bin"
+    export PATH="$PATH:/opt/nvim-linux-x86_64/bin"
 
 ### AppImage ("universal" Linux package)
 
 The [Releases](https://github.com/neovim/neovim/releases) page provides an [AppImage](https://appimage.org) that runs on most Linux systems. No installation is needed, just download `nvim-linux-x86_64.appimage` and run it. (It might not work if your Linux distribution is more than 4 years old.) The following instructions assume an `x86_64` architecture; on ARM Linux replace with `arm64`.
 
-    curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-86_64.appimage
+    curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
     chmod u+x nvim-linux-x86_64.appimage
     ./nvim-linux-x86_64.appimage
 
@@ -130,7 +130,7 @@ To expose nvim globally:
     mkdir -p /opt/nvim
     mv nvim-linux-x86_64.appimage /opt/nvim/nvim
 
-And the following line to `~/.bashrc`:
+And the following line to your shell config (`~/.bashrc`, `~/.zshrc`, ...):
 
     export PATH="$PATH:/opt/nvim/"
 
@@ -205,7 +205,7 @@ You can also get nightly builds of git master from the [Copr automated build sys
     dnf copr enable agriffis/neovim-nightly
     dnf install -y neovim python3-neovim
 
-See the [blog post](https://arongriffis.com/2019/03/02/neovim-nightly-builds) for information on how these are built.
+See the [blog post](https://arongriffis.com/2019-03-02-neovim-nightly-builds) for information on how these are built.
 
 ### Flatpak
 
@@ -303,7 +303,7 @@ Neovim nightly and stable are available on the [snap store](https://snapcraft.io
 **Stable Builds**
 
 ```sh
-sudo snap install --beta nvim --classic
+sudo snap install nvim --classic
 ```
 
 **Nightly Builds**

@@ -19,18 +19,7 @@ describe('ui/ext_popupmenu', function()
   local screen
   before_each(function()
     clear()
-    screen = Screen.new(60, 8)
-    screen:attach({ rgb = true, ext_popupmenu = true })
-    screen:set_default_attr_ids({
-      [1] = { bold = true, foreground = Screen.colors.Blue },
-      [2] = { bold = true },
-      [3] = { reverse = true },
-      [4] = { bold = true, reverse = true },
-      [5] = { bold = true, foreground = Screen.colors.SeaGreen },
-      [6] = { background = Screen.colors.WebGray },
-      [7] = { background = Screen.colors.LightMagenta },
-      [8] = { foreground = Screen.colors.Red },
-    })
+    screen = Screen.new(60, 8, { rgb = true, ext_popupmenu = true })
     source([[
       function! TestComplete() abort
         call complete(1, [{'word':'foo', 'abbr':'fo', 'menu':'the foo', 'info':'foo-y', 'kind':'x'}, 'bar', 'spam'])
@@ -52,7 +41,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -67,7 +56,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       ^                                                            |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -83,7 +72,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       ^                                                            |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -98,7 +87,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       bar^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
     }
   end)
@@ -110,7 +99,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -125,7 +114,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -140,7 +129,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       spam^                                                        |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -154,7 +143,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]])
 
     feed('<c-w><C-r>=TestComplete()<CR>')
@@ -163,7 +152,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -178,7 +167,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -193,7 +182,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       bar^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -208,7 +197,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       ^                                                            |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -223,7 +212,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -237,7 +226,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       ^                                                            |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]])
 
     command('set wildmenu')
@@ -332,7 +321,7 @@ describe('ui/ext_popupmenu', function()
                                                                     |
         foo^                                                         |
         {1:~                                                           }|*5
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]],
         popupmenu = {
           items = expected,
@@ -347,7 +336,7 @@ describe('ui/ext_popupmenu', function()
                                                                     |
         spam^                                                        |
         {1:~                                                           }|*5
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]],
         popupmenu = {
           items = expected,
@@ -362,7 +351,7 @@ describe('ui/ext_popupmenu', function()
                                                                     |
         spam^                                                        |
         {1:~                                                           }|*5
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]],
         popupmenu = {
           items = expected,
@@ -376,7 +365,7 @@ describe('ui/ext_popupmenu', function()
                                                                     |
         bar^                                                         |
         {1:~                                                           }|*5
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]])
 
       feed('<Esc>:sign <Tab>')
@@ -440,33 +429,33 @@ describe('ui/ext_popupmenu', function()
       screen:expect([[
                                                                     |
         foo^                                                         |
-        {6:fo   x the foo }{1:                                             }|
-        {7:bar            }{1:                                             }|
-        {7:spam           }{1:                                             }|
+        {12:fo   x the foo }{1:                                             }|
+        {4:bar            }{1:                                             }|
+        {4:spam           }{1:                                             }|
         {1:~                                                           }|*2
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]])
 
       feed('<f1>')
       screen:expect([[
                                                                     |
         spam^                                                        |
-        {7:fo   x the foo }{1:                                             }|
-        {7:bar            }{1:                                             }|
-        {6:spam           }{1:                                             }|
+        {4:fo   x the foo }{1:                                             }|
+        {4:bar            }{1:                                             }|
+        {12:spam           }{1:                                             }|
         {1:~                                                           }|*2
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]])
 
       feed('<f2>')
       screen:expect([[
                                                                     |
         spam^                                                        |
-        {7:fo   x the foo }{1:                                             }|
-        {7:bar            }{1:                                             }|
-        {7:spam           }{1:                                             }|
+        {4:fo   x the foo }{1:                                             }|
+        {4:bar            }{1:                                             }|
+        {4:spam           }{1:                                             }|
         {1:~                                                           }|*2
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]])
 
       feed('<f3>')
@@ -474,42 +463,42 @@ describe('ui/ext_popupmenu', function()
                                                                     |
         bar^                                                         |
         {1:~                                                           }|*5
-        {2:-- INSERT --}                                                |
+        {5:-- INSERT --}                                                |
       ]])
 
       feed('<Esc>:sign <Tab>')
       screen:expect([[
                                                                     |
-        bar  {6: define         }                                       |
-        {1:~    }{7: jump           }{1:                                       }|
-        {1:~    }{7: list           }{1:                                       }|
-        {1:~    }{7: place          }{1:                                       }|
-        {1:~    }{7: undefine       }{1:                                       }|
-        {1:~    }{7: unplace        }{1:                                       }|
+        bar  {12: define         }                                       |
+        {1:~    }{4: jump           }{1:                                       }|
+        {1:~    }{4: list           }{1:                                       }|
+        {1:~    }{4: place          }{1:                                       }|
+        {1:~    }{4: undefine       }{1:                                       }|
+        {1:~    }{4: unplace        }{1:                                       }|
         :sign define^                                                |
       ]])
 
       feed('<f1>')
       screen:expect([[
                                                                     |
-        bar  {7: define         }                                       |
-        {1:~    }{7: jump           }{1:                                       }|
-        {1:~    }{6: list           }{1:                                       }|
-        {1:~    }{7: place          }{1:                                       }|
-        {1:~    }{7: undefine       }{1:                                       }|
-        {1:~    }{7: unplace        }{1:                                       }|
+        bar  {4: define         }                                       |
+        {1:~    }{4: jump           }{1:                                       }|
+        {1:~    }{12: list           }{1:                                       }|
+        {1:~    }{4: place          }{1:                                       }|
+        {1:~    }{4: undefine       }{1:                                       }|
+        {1:~    }{4: unplace        }{1:                                       }|
         :sign list^                                                  |
       ]])
 
       feed('<f2>')
       screen:expect([[
                                                                     |
-        bar  {7: define         }                                       |
-        {1:~    }{7: jump           }{1:                                       }|
-        {1:~    }{7: list           }{1:                                       }|
-        {1:~    }{7: place          }{1:                                       }|
-        {1:~    }{7: undefine       }{1:                                       }|
-        {1:~    }{7: unplace        }{1:                                       }|
+        bar  {4: define         }                                       |
+        {1:~    }{4: jump           }{1:                                       }|
+        {1:~    }{4: list           }{1:                                       }|
+        {1:~    }{4: place          }{1:                                       }|
+        {1:~    }{4: undefine       }{1:                                       }|
+        {1:~    }{4: unplace        }{1:                                       }|
         :sign ^                                                      |
       ]])
 
@@ -542,33 +531,33 @@ describe('ui/ext_popupmenu', function()
     screen:expect([[
       aa bb cc                                                    |
       aa^                                                          |
-      {6:aa             }{1:                                             }|
-      {7:bb             }{1:                                             }|
-      {7:cc             }{1:                                             }|
+      {12:aa             }{1:                                             }|
+      {4:bb             }{1:                                             }|
+      {4:cc             }{1:                                             }|
       {1:~                                                           }|*2
-      {2:-- Keyword Local completion (^N^P) }{5:match 1 of 3}             |
+      {5:-- Keyword Local completion (^N^P) }{6:match 1 of 3}             |
     ]])
 
     feed('<f1>')
     screen:expect([[
       aa bb cc                                                    |
       cc^                                                          |
-      {7:aa             }{1:                                             }|
-      {7:bb             }{1:                                             }|
-      {6:cc             }{1:                                             }|
+      {4:aa             }{1:                                             }|
+      {4:bb             }{1:                                             }|
+      {12:cc             }{1:                                             }|
       {1:~                                                           }|*2
-      {2:-- Keyword Local completion (^N^P) }{5:match 3 of 3}             |
+      {5:-- Keyword Local completion (^N^P) }{6:match 3 of 3}             |
     ]])
 
     feed('<f2>')
     screen:expect([[
       aa bb cc                                                    |
       cc^                                                          |
-      {7:aa             }{1:                                             }|
-      {7:bb             }{1:                                             }|
-      {7:cc             }{1:                                             }|
+      {4:aa             }{1:                                             }|
+      {4:bb             }{1:                                             }|
+      {4:cc             }{1:                                             }|
       {1:~                                                           }|*2
-      {2:-- Keyword Local completion (^N^P) }{8:Back at original}         |
+      {5:-- Keyword Local completion (^N^P) }{19:Back at original}         |
     ]])
 
     feed('<f3>')
@@ -576,7 +565,7 @@ describe('ui/ext_popupmenu', function()
       aa bb cc                                                    |
       bb^                                                          |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]])
   end)
 
@@ -619,7 +608,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       January^                                                     |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
       ]],
         popupmenu = {
           items = month_expected,
@@ -671,7 +660,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       January^                                                     |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
       ]],
         popupmenu = {
           items = month_expected,
@@ -726,7 +715,7 @@ describe('ui/ext_popupmenu', function()
                                                                 |
     January^                                                     |
     {1:~                                                           }|*5
-    {2:-- INSERT --}                                                |
+    {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = month_expected,
@@ -740,7 +729,7 @@ describe('ui/ext_popupmenu', function()
                                                                 |
     January^                                                     |
     {1:~                                                           }|*5
-    {2:-- INSERT --}                                                |
+    {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = month_expected,
@@ -832,10 +821,10 @@ describe('ui/ext_popupmenu', function()
       grid = [[
                                       |
       {1:~                               }|*3
-      {4:långfile2                       }|
+      {3:långfile2                       }|
                                       |
       {1:~                               }|*2
-      {3:långfile1                       }|
+      {2:långfile1                       }|
       :b långfile1^                    |
     ]],
       popupmenu = {
@@ -851,6 +840,8 @@ describe('ui/ext_popupmenu', function()
       set mouse=a mousemodel=popup
 
       aunmenu PopUp
+      " Delete the default MenuPopup event handler.
+      autocmd! nvim.popupmenu
       menu PopUp.foo :let g:menustr = 'foo'<CR>
       menu PopUp.bar :let g:menustr = 'bar'<CR>
       menu PopUp.baz :let g:menustr = 'baz'<CR>
@@ -861,7 +852,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       foo^                                                         |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -876,7 +867,7 @@ describe('ui/ext_popupmenu', function()
                                                                   |
       ^                                                            |
       {1:~                                                           }|*5
-      {2:-- INSERT --}                                                |
+      {5:-- INSERT --}                                                |
     ]],
       popupmenu = {
         items = expected,
@@ -897,9 +888,9 @@ describe('ui/ext_popupmenu', function()
     feed('<RightMouse><0,0>')
     screen:expect([[
                                                                   |
-      {7:^foo }                                                        |
-      {7:bar }{1:                                                        }|
-      {7:baz }{1:                                                        }|
+      {4:^foo }                                                        |
+      {4:bar }{1:                                                        }|
+      {4:baz }{1:                                                        }|
       {1:~                                                           }|*3
                                                                   |
     ]])
@@ -965,7 +956,6 @@ describe("builtin popupmenu 'pumblend'", function()
       [44] = { foreground = tonumber('0x3f3f3f'), background = tonumber('0x7f5d7f') },
       [45] = { background = Screen.colors.WebGray, blend = 0 },
     })
-    screen:attach()
     command('syntax on')
     command('set mouse=a')
     command('set pumblend=10')
@@ -1115,7 +1105,7 @@ describe("builtin popupmenu 'pumblend'", function()
   end)
 
   it('256-color (non-RGB)', function()
-    local screen = Screen.new(60, 8)
+    local screen = Screen.new(60, 8, { rgb = false })
     screen:set_default_attr_ids({
       [1] = { foreground = Screen.colors.Grey0, background = tonumber('0x000007') },
       [2] = { foreground = tonumber('0x000055'), background = tonumber('0x000007') },
@@ -1128,7 +1118,6 @@ describe("builtin popupmenu 'pumblend'", function()
       [9] = { bold = true },
       [10] = { foreground = tonumber('0x000002') },
     })
-    screen:attach({ rgb = false })
     command('set pumblend=10')
     insert([[
       Lorem ipsum dolor sit amet, consectetur
@@ -1157,28 +1146,53 @@ describe('builtin popupmenu', function()
   local function with_ext_multigrid(multigrid)
     local screen
     before_each(function()
-      screen = Screen.new(32, 20)
+      screen = Screen.new(32, 20, { ext_multigrid = multigrid })
       screen:set_default_attr_ids({
         -- popup selected item / scrollbar track
-        ['s'] = { background = Screen.colors.WebGray },
+        s = { background = Screen.colors.Grey },
         -- popup non-selected item
-        ['n'] = { background = Screen.colors.LightMagenta },
+        n = { background = Screen.colors.Plum1 },
         -- popup scrollbar knob
-        ['c'] = { background = Screen.colors.Grey0 },
+        c = { background = Screen.colors.Black },
         [1] = { bold = true, foreground = Screen.colors.Blue },
         [2] = { bold = true },
         [3] = { reverse = true },
         [4] = { bold = true, reverse = true },
         [5] = { bold = true, foreground = Screen.colors.SeaGreen },
-        [6] = { foreground = Screen.colors.Grey100, background = Screen.colors.Red },
+        [6] = { foreground = Screen.colors.White, background = Screen.colors.Red },
         [7] = { background = Screen.colors.Yellow }, -- Search
         [8] = { foreground = Screen.colors.Red },
-        kn = { foreground = Screen.colors.Red, background = Screen.colors.Magenta },
+        [9] = { foreground = Screen.colors.Yellow, background = Screen.colors.Green },
+        [10] = { foreground = Screen.colors.White, background = Screen.colors.Green },
         ks = { foreground = Screen.colors.Red, background = Screen.colors.Grey },
-        xn = { foreground = Screen.colors.White, background = Screen.colors.Magenta },
+        kn = { foreground = Screen.colors.Red, background = Screen.colors.Plum1 },
         xs = { foreground = Screen.colors.Black, background = Screen.colors.Grey },
+        xn = { foreground = Screen.colors.White, background = Screen.colors.Plum1 },
+        ms = { foreground = Screen.colors.Blue, background = Screen.colors.Grey },
+        mn = { foreground = Screen.colors.Blue, background = Screen.colors.Plum1 },
+        ds = { foreground = Screen.colors.DarkRed, background = Screen.colors.Grey },
+        dn = { foreground = Screen.colors.DarkRed, background = Screen.colors.Plum1 },
+        ums = {
+          foreground = Screen.colors.Blue,
+          background = Screen.colors.Grey,
+          underline = true,
+        },
+        umn = {
+          foreground = Screen.colors.Blue,
+          background = Screen.colors.Plum1,
+          underline = true,
+        },
+        uds = {
+          foreground = Screen.colors.DarkRed,
+          background = Screen.colors.Grey,
+          underline = true,
+        },
+        udn = {
+          foreground = Screen.colors.DarkRed,
+          background = Screen.colors.Plum1,
+          underline = true,
+        },
       })
-      screen:attach({ ext_multigrid = multigrid })
     end)
 
     it('with preview-window above', function()
@@ -1297,7 +1311,7 @@ describe('builtin popupmenu', function()
       end
     end)
 
-    it('with preview-window above and tall and inverted', function()
+    it('with preview-window above, tall and inverted', function()
       feed(':ped<CR><c-w>8+')
       feed('iaa<cr>bb<cr>cc<cr>dd<cr>ee<cr>')
       feed('ff<cr>gg<cr>hh<cr>ii<cr>jj<cr>')
@@ -1378,7 +1392,7 @@ describe('builtin popupmenu', function()
       end
     end)
 
-    it('with preview-window above and short and inverted', function()
+    it('with preview-window above, short and inverted', function()
       feed(':ped<CR><c-w>4+')
       feed('iaa<cr>bb<cr>cc<cr>dd<cr>ee<cr>')
       feed('ff<cr>gg<cr>hh<cr>ii<cr>jj<cr>')
@@ -1454,7 +1468,7 @@ describe('builtin popupmenu', function()
       end
     end)
 
-    it('with preview-window below and inverted', function()
+    it('with preview-window below, inverted', function()
       feed(':ped<CR><c-w>4+<c-w>r')
       feed('iaa<cr>bb<cr>cc<cr>dd<cr>ee<cr>')
       feed('ff<cr>gg<cr>hh<cr>ii<cr>jj<cr>')
@@ -1529,20 +1543,203 @@ describe('builtin popupmenu', function()
       end
     end)
 
-    if not multigrid then
-      -- oldtest: Test_pum_with_preview_win()
-      it('preview window opened during completion', function()
+    describe('popup and preview window do not overlap', function()
+      before_each(function()
+        screen:try_resize(53, 20)
+      end)
+
+      -- oldtest: Test_popup_and_previewwindow_dump_pedit()
+      it('with :pedit', function()
         exec([[
-          funct Omni_test(findstart, base)
-            if a:findstart
-              return col(".") - 1
-            endif
-            return [#{word: "one", info: "1info"}, #{word: "two", info: "2info"}, #{word: "three", info: "3info"}]
-          endfunc
-          set omnifunc=Omni_test
-          set completeopt+=longest
+          set previewheight=9
+          silent! pedit
+          call setline(1, map(repeat(["ab"], 10), "v:val .. v:key"))
+          exec "norm! G\<C-E>\<C-E>"
         ]])
-        feed('Gi<C-X><C-O>')
+        feed('o')
+        n.poke_eventloop()
+        feed('<C-X><C-N>')
+        if multigrid then
+          screen:expect({
+            grid = [[
+            ## grid 1
+              [4:-----------------------------------------------------]|*9
+              {3:[No Name] [Preview][+]                               }|
+              [2:-----------------------------------------------------]|*8
+              {4:[No Name] [+]                                        }|
+              [3:-----------------------------------------------------]|
+            ## grid 2
+              ab4                                                  |
+              ab5                                                  |
+              ab6                                                  |
+              ab7                                                  |
+              ab8                                                  |
+              ab9                                                  |
+              ab0^                                                  |
+              {1:~                                                    }|
+            ## grid 3
+              {2:-- Keyword Local completion (^N^P) }{5:match 1 of 10}     |
+            ## grid 4
+              ab0                                                  |
+              ab1                                                  |
+              ab2                                                  |
+              ab3                                                  |
+              ab4                                                  |
+              ab5                                                  |
+              ab6                                                  |
+              ab7                                                  |
+              ab8                                                  |
+            ## grid 5
+              {s:ab0            }{c: }|
+              {n:ab1            }{c: }|
+              {n:ab2            }{c: }|
+              {n:ab3            }{c: }|
+              {n:ab4            }{s: }|
+              {n:ab5            }{s: }|
+              {n:ab6            }{s: }|
+            ]],
+            float_pos = {
+              [5] = { -1, 'SW', 2, 6, 0, false, 100 },
+            },
+          })
+        else
+          screen:expect([[
+            ab0                                                  |
+            ab1                                                  |
+            ab2                                                  |
+            ab3                                                  |
+            ab4                                                  |
+            ab5                                                  |
+            ab6                                                  |
+            ab7                                                  |
+            ab8                                                  |
+            {s:ab0            }{c: }{3:ew][+]                               }|
+            {n:ab1            }{c: }                                     |
+            {n:ab2            }{c: }                                     |
+            {n:ab3            }{c: }                                     |
+            {n:ab4            }{s: }                                     |
+            {n:ab5            }{s: }                                     |
+            {n:ab6            }{s: }                                     |
+            ab0^                                                  |
+            {1:~                                                    }|
+            {4:[No Name] [+]                                        }|
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 10}     |
+          ]])
+        end
+      end)
+
+      -- oldtest: Test_popup_and_previewwindow_dump_pbuffer()
+      it('with :pbuffer', function()
+        exec([[
+          set previewheight=9
+          silent! pbuffer
+          call setline(1, map(repeat(["ab"], 10), "v:val .. v:key"))
+          exec "norm! G\<C-E>\<C-E>\<C-E>"
+        ]])
+        feed('o')
+        n.poke_eventloop()
+        feed('<C-X><C-N>')
+        if multigrid then
+          screen:expect({
+            grid = [[
+            ## grid 1
+              [4:-----------------------------------------------------]|*9
+              {3:[No Name] [Preview][+]                               }|
+              [2:-----------------------------------------------------]|*8
+              {4:[No Name] [+]                                        }|
+              [3:-----------------------------------------------------]|
+            ## grid 2
+              ab5                                                  |
+              ab6                                                  |
+              ab7                                                  |
+              ab8                                                  |
+              ab9                                                  |
+              ab0^                                                  |
+              {1:~                                                    }|*2
+            ## grid 3
+              {2:-- Keyword Local completion (^N^P) }{5:match 1 of 10}     |
+            ## grid 4
+              ab0                                                  |
+              ab1                                                  |
+              ab2                                                  |
+              ab3                                                  |
+              ab4                                                  |
+              ab5                                                  |
+              ab6                                                  |
+              ab7                                                  |
+              ab8                                                  |
+            ## grid 5
+              {s:ab0            }{c: }|
+              {n:ab1            }{c: }|
+              {n:ab2            }{c: }|
+              {n:ab3            }{s: }|
+              {n:ab4            }{s: }|
+              {n:ab5            }{s: }|
+            ]],
+            float_pos = {
+              [5] = { -1, 'SW', 2, 5, 0, false, 100 },
+            },
+          })
+        else
+          screen:expect([[
+            ab0                                                  |
+            ab1                                                  |
+            ab2                                                  |
+            ab3                                                  |
+            ab4                                                  |
+            ab5                                                  |
+            ab6                                                  |
+            ab7                                                  |
+            ab8                                                  |
+            {s:ab0            }{c: }{3:ew][+]                               }|
+            {n:ab1            }{c: }                                     |
+            {n:ab2            }{c: }                                     |
+            {n:ab3            }{s: }                                     |
+            {n:ab4            }{s: }                                     |
+            {n:ab5            }{s: }                                     |
+            ab0^                                                  |
+            {1:~                                                    }|*2
+            {4:[No Name] [+]                                        }|
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 10}     |
+          ]])
+        end
+      end)
+    end)
+
+    -- oldtest: Test_pum_with_preview_win()
+    it('preview window opened during completion', function()
+      exec([[
+        funct Omni_test(findstart, base)
+          if a:findstart
+            return col(".") - 1
+          endif
+          return [#{word: "one", info: "1info"}, #{word: "two", info: "2info"}, #{word: "three", info: "3info"}]
+        endfunc
+        set omnifunc=Omni_test
+        set completeopt-=popup completeopt+=longest,preview
+      ]])
+      feed('Gi<C-X><C-O>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+            ^                                |
+            {1:~                               }|*18
+          ## grid 3
+            {2:-- }{8:Back at original}             |
+          ## grid 4
+            {n:one            }|
+            {n:two            }|
+            {n:three          }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 0, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           ^                                |
           {n:one            }{1:                 }|
@@ -1551,7 +1748,35 @@ describe('builtin popupmenu', function()
           {1:~                               }|*15
           {2:-- }{8:Back at original}             |
         ]])
-        feed('<C-N>')
+      end
+      feed('<C-N>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [5:--------------------------------]|*3
+            {3:[Scratch] [Preview]             }|
+            [2:--------------------------------]|*14
+            {4:[No Name] [+]                   }|
+            [3:--------------------------------]|
+          ## grid 2
+            one^                             |
+            {1:~                               }|*13
+          ## grid 3
+            {2:-- }{5:match 1 of 3}                 |
+          ## grid 4
+            {s:one            }|
+            {n:two            }|
+            {n:three          }|
+          ## grid 5
+            1info                           |
+            {1:~                               }|*2
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 0, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           1info                           |
           {1:~                               }|*2
@@ -1564,18 +1789,52 @@ describe('builtin popupmenu', function()
           {4:[No Name] [+]                   }|
           {2:-- }{5:match 1 of 3}                 |
         ]])
-      end)
+      end
+    end)
 
-      -- oldtest: Test_scrollbar_on_wide_char()
-      it('scrollbar overwrites half of double-width char below properly', function()
-        screen:try_resize(32, 10)
-        exec([[
-          call setline(1, ['a', '            啊啊啊',
-                              \ '             哦哦哦',
-                              \ '              呃呃呃'])
-          call setline(5, range(10)->map({i, v -> 'aa' .. v .. 'bb'}))
-        ]])
-        feed('A<C-X><C-N>')
+    -- oldtest: Test_scrollbar_on_wide_char()
+    it('scrollbar overwrites half of double-width char below properly', function()
+      screen:try_resize(32, 10)
+      exec([[
+        call setline(1, ['a', '            啊啊啊',
+                            \ '             哦哦哦',
+                            \ '              呃呃呃'])
+        call setline(5, range(10)->map({i, v -> 'aa' .. v .. 'bb'}))
+      ]])
+      feed('A<C-X><C-N>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*9
+            [3:--------------------------------]|
+          ## grid 2
+            aa0bb^                           |
+                        啊啊啊              |
+                         哦哦哦             |
+                          呃呃呃            |
+            aa0bb                           |
+            aa1bb                           |
+            aa2bb                           |
+            aa3bb                           |
+            aa4bb                           |
+          ## grid 3
+            {2:-- }{5:match 1 of 10}                |
+          ## grid 4
+            {s:aa0bb          }{c: }|
+            {n:aa1bb          }{c: }|
+            {n:aa2bb          }{c: }|
+            {n:aa3bb          }{c: }|
+            {n:aa4bb          }{c: }|
+            {n:aa5bb          }{c: }|
+            {n:aa6bb          }{s: }|
+            {n:aa7bb          }{s: }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 0, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           aa0bb^                           |
           {s:aa0bb          }{c: }啊              |
@@ -1588,52 +1847,132 @@ describe('builtin popupmenu', function()
           {n:aa7bb          }{s: }                |
           {2:-- }{5:match 1 of 10}                |
         ]])
-      end)
-    end
+      end
+    end)
 
-    describe('floating window preview #popup', function()
-      it('pum popup preview', function()
+    describe('completeopt=popup shows preview in floatwin', function()
+      before_each(function()
         --row must > 10
         screen:try_resize(40, 11)
+        screen:add_extra_attr_ids({
+          [100] = { foreground = Screen.colors.Blue1, bold = true },
+          [101] = { foreground = Screen.colors.SeaGreen4, bold = true },
+          [102] = { background = Screen.colors.Red1, foreground = Screen.colors.Grey100 },
+          [103] = { foreground = Screen.colors.Red1 },
+          [104] = { background = Screen.colors.Green, foreground = Screen.colors.Grey100 },
+          [105] = {
+            background = Screen.colors.Plum1,
+            foreground = Screen.colors.Brown,
+            bold = true,
+          },
+          [106] = { background = Screen.colors.Plum1, foreground = Screen.colors.Cyan4 },
+          [107] = { background = Screen.colors.Plum1, foreground = Screen.colors.SlateBlue },
+          [108] = { background = Screen.colors.Plum1, foreground = Screen.colors.Fuchsia },
+          n = { background = Screen.colors.Plum1 },
+          c = { background = Screen.colors.Grey0 },
+          xs = { background = Screen.colors.Grey, foreground = Screen.colors.Grey0 },
+          ks = { background = Screen.colors.Grey, foreground = Screen.colors.Red1 },
+          kn = { background = Screen.colors.Plum1, foreground = Screen.colors.Red1 },
+          s = { background = Screen.colors.Grey },
+          xn = { background = Screen.colors.Plum1, foreground = Screen.colors.Grey100 },
+          mn = { background = Screen.colors.Plum1, foreground = Screen.colors.Blue1 },
+          ds = { background = Screen.colors.Grey, foreground = Screen.colors.Red4 },
+          ms = { background = Screen.colors.Grey, foreground = Screen.colors.Blue1 },
+          dn = { background = Screen.colors.Plum1, foreground = Screen.colors.Red4 },
+          ums = {
+            background = Screen.colors.Grey,
+            foreground = Screen.colors.Blue1,
+            underline = true,
+          },
+          umn = {
+            background = Screen.colors.Plum1,
+            foreground = Screen.colors.Blue1,
+            underline = true,
+          },
+          uds = {
+            background = Screen.colors.Grey,
+            foreground = Screen.colors.Red4,
+            underline = true,
+          },
+          udn = {
+            background = Screen.colors.Plum1,
+            foreground = Screen.colors.Red4,
+            underline = true,
+          },
+        })
         exec([[
+          let g:list = [#{word: "one", info: "1info"}, #{word: "two", info: "2info"}, #{word: "looooooooooooooong"}]
+          let g:bufnrs = []
           funct Omni_test(findstart, base)
             if a:findstart
               return col(".") - 1
             endif
-            return [#{word: "one", info: "1info"}, #{word: "two", info: "2info"}, #{word: "looooooooooooooong"}]
+            return g:list
           endfunc
           set omnifunc=Omni_test
           set completeopt=menu,popup
-
           funct Set_info()
             let comp_info = complete_info()
+            if get(comp_info, 'preview_bufnr', 0) > 0
+              call add(g:bufnrs, comp_info['preview_bufnr'])
+            endif
             if comp_info['selected'] == 2
               call nvim__complete_set(comp_info['selected'], {"info": "3info"})
             endif
           endfunc
-          autocmd CompleteChanged * call Set_info()
+          funct TsHl()
+            let comp_info = complete_info(['selected'])
+            if get(comp_info, 'preview_bufnr', 0) > 0
+              call v:lua.vim.treesitter.start(comp_info['preview_bufnr'], 'markdown')
+            endif
+            if comp_info['selected'] == 0
+              call nvim__complete_set(comp_info['selected'], {"info": "```lua\nfunction test()\n  print('foo')\nend\n```"})
+            endif
+          endfunc
+          augroup Group
+            au!
+            autocmd CompleteChanged * :call Set_info()
+          augroup END
+          funct TestTs()
+            autocmd! Group
+            autocmd CompleteChanged * call TsHl()
+          endfunc
+          funct Append_multipe()
+            call extend(g:list, [#{word: "for .. ipairs", info: "```lua\nfor index, value in ipairs(t) do\n\t\nend\n```"}])
+          endfunc
         ]])
+      end)
+
+      it('pum popup preview', function()
         feed('Gi<C-x><C-o>')
         --floating preview in right
         if multigrid then
-          screen:expect {
+          screen:expect({
             grid = [[
-          ## grid 1
-            [2:----------------------------------------]|*10
-            [3:----------------------------------------]|
-          ## grid 2
-            one^                                     |
-            {1:~                                       }|*9
-          ## grid 3
-            {2:-- }{5:match 1 of 3}                         |
-          ## grid 4
-            {n:1info}|
-            {n:     }|
-          ## grid 5
-            {s:one                }|
-            {n:two                }|
-            {n:looooooooooooooong }|
-          ]],
+            ## grid 1
+              [2:----------------------------------------]|*10
+              [3:----------------------------------------]|
+            ## grid 2
+              one^                                     |
+              {100:~                                       }|*9
+            ## grid 3
+              {5:-- }{101:match 1 of 3}                         |
+            ## grid 4
+              {n:1info}|
+            ## grid 5
+              {s:one                }|
+              {n:two                }|
+              {n:looooooooooooooong }|
+            ]],
+            win_pos = {
+              [2] = {
+                height = 10,
+                startcol = 0,
+                startrow = 0,
+                width = 40,
+                win = 1000,
+              },
+            },
             float_pos = {
               [5] = { -1, 'NW', 2, 1, 0, false, 100 },
               [4] = { 1001, 'NW', 1, 1, 19, false, 50 },
@@ -1651,46 +1990,69 @@ describe('builtin popupmenu', function()
               [4] = {
                 win = 1001,
                 topline = 0,
-                botline = 2,
+                botline = 1,
                 curline = 0,
                 curcol = 0,
                 linecount = 1,
                 sum_scroll_delta = 0,
               },
             },
-          }
+            win_viewport_margins = {
+              [2] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1000,
+              },
+              [4] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1001,
+              },
+            },
+          })
         else
-          screen:expect {
-            grid = [[
+          screen:expect([[
             one^                                     |
-            {s:one                }{n:1info}{1:                }|
-            {n:two                     }{1:                }|
-            {n:looooooooooooooong }{1:                     }|
-            {1:~                                       }|*6
-            {2:-- }{5:match 1 of 3}                         |
-          ]],
-          }
+            {s:one                }{n:1info}{100:                }|
+            {n:two                }{100:                     }|
+            {n:looooooooooooooong }{100:                     }|
+            {100:~                                       }|*6
+            {5:-- }{101:match 1 of 3}                         |
+          ]])
         end
 
-        -- info window position should be adjusted when new leader add
-        feed('<C-P>o')
+        -- delete one character make the pum width smaller than before
+        -- info window position should be adjusted when popupmenu width changed
+        feed('<BS>')
         if multigrid then
-          screen:expect {
+          screen:expect({
             grid = [[
-          ## grid 1
-            [2:----------------------------------------]|*10
-            [3:----------------------------------------]|
-          ## grid 2
-            o^                                       |
-            {1:~                                       }|*9
-          ## grid 3
-            {2:-- }{8:Back at original}                     |
-          ## grid 4
-            {n:1info}|
-            {n:     }|
-          ## grid 5
-            {n:one            }|
-          ]],
+            ## grid 1
+              [2:----------------------------------------]|*10
+              [3:----------------------------------------]|
+            ## grid 2
+              on^                                      |
+              {100:~                                       }|*9
+            ## grid 3
+              {5:-- }{101:match 1 of 3}                         |
+            ## grid 4
+              {n:1info}|
+            ## grid 5
+              {s:one            }|
+            ]],
+            win_pos = {
+              [2] = {
+                height = 10,
+                startcol = 0,
+                startrow = 0,
+                width = 40,
+                win = 1000,
+              },
+            },
             float_pos = {
               [5] = { -1, 'NW', 2, 1, 0, false, 100 },
               [4] = { 1001, 'NW', 1, 1, 15, false, 50 },
@@ -1701,58 +2063,156 @@ describe('builtin popupmenu', function()
                 topline = 0,
                 botline = 2,
                 curline = 0,
-                curcol = 1,
+                curcol = 2,
                 linecount = 1,
                 sum_scroll_delta = 0,
               },
               [4] = {
                 win = 1001,
                 topline = 0,
-                botline = 2,
+                botline = 1,
                 curline = 0,
                 curcol = 0,
                 linecount = 1,
                 sum_scroll_delta = 0,
               },
             },
-          }
+            win_viewport_margins = {
+              [2] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1000,
+              },
+              [4] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1001,
+              },
+            },
+          })
         else
-          screen:expect {
-            grid = [[
-            o^                                       |
-            {n:one            1info}{1:                    }|
-            {1:~              }{n:     }{1:                    }|
-            {1:~                                       }|*7
-            {2:-- }{8:Back at original}                     |
-          ]],
-          }
+          screen:expect([[
+            on^                                      |
+            {s:one            }{n:1info}{100:                    }|
+            {100:~                                       }|*8
+            {5:-- }{101:match 1 of 3}                         |
+          ]])
         end
 
-        -- test nvim__complete_set_info
-        feed('<ESC>cc<C-X><C-O><C-N><C-N>')
-        vim.uv.sleep(10)
+        -- when back to original the preview float should be closed.
+        feed('<C-P>')
         if multigrid then
-          screen:expect {
+          screen:expect({
             grid = [[
-          ## grid 1
-            [2:----------------------------------------]|*10
-            [3:----------------------------------------]|
-          ## grid 2
-            looooooooooooooong^                      |
-            {1:~                                       }|*9
-          ## grid 3
-            {2:-- }{5:match 3 of 3}                         |
-          ## grid 5
-            {n:one                }|
-            {n:two                }|
-            {s:looooooooooooooong }|
-          ## grid 6
-            {n:3info}|
-            {n:     }|
-          ]],
+            ## grid 1
+              [2:----------------------------------------]|*10
+              [3:----------------------------------------]|
+            ## grid 2
+              on^                                      |
+              {100:~                                       }|*9
+            ## grid 3
+              {5:-- }{103:Back at original}                     |
+            ## grid 4 (hidden)
+              {n:1info}|
+            ## grid 5
+              {n:one            }|
+            ]],
+            win_pos = {
+              [2] = {
+                height = 10,
+                startcol = 0,
+                startrow = 0,
+                width = 40,
+                win = 1000,
+              },
+            },
             float_pos = {
               [5] = { -1, 'NW', 2, 1, 0, false, 100 },
-              [6] = { 1002, 'NW', 1, 1, 19, false, 50 },
+            },
+            win_viewport = {
+              [2] = {
+                win = 1000,
+                topline = 0,
+                botline = 2,
+                curline = 0,
+                curcol = 2,
+                linecount = 1,
+                sum_scroll_delta = 0,
+              },
+              [4] = {
+                win = 1001,
+                topline = 0,
+                botline = 1,
+                curline = 0,
+                curcol = 0,
+                linecount = 1,
+                sum_scroll_delta = 0,
+              },
+            },
+            win_viewport_margins = {
+              [2] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1000,
+              },
+              [4] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1001,
+              },
+            },
+          })
+        else
+          screen:expect([[
+            on^                                      |
+            {n:one            }{100:                         }|
+            {100:~                                       }|*8
+            {5:-- }{103:Back at original}                     |
+          ]])
+        end
+        feed('<C-E><ESC>')
+      end)
+
+      it('nvim__set_complete', function()
+        feed('S<C-X><C-O><C-N><C-N>')
+        if multigrid then
+          screen:expect({
+            grid = [[
+            ## grid 1
+              [2:----------------------------------------]|*10
+              [3:----------------------------------------]|
+            ## grid 2
+              looooooooooooooong^                      |
+              {100:~                                       }|*9
+            ## grid 3
+              {5:-- }{101:match 3 of 3}                         |
+            ## grid 4
+              {n:3info}|
+            ## grid 5
+              {n:one                }|
+              {n:two                }|
+              {s:looooooooooooooong }|
+            ]],
+            win_pos = {
+              [2] = {
+                height = 10,
+                startcol = 0,
+                startrow = 0,
+                width = 40,
+                win = 1000,
+              },
+            },
+            float_pos = {
+              [5] = { -1, 'NW', 2, 1, 0, false, 100 },
+              [4] = { 1001, 'NW', 1, 1, 19, false, 50 },
             },
             win_viewport = {
               [2] = {
@@ -1764,56 +2224,79 @@ describe('builtin popupmenu', function()
                 linecount = 1,
                 sum_scroll_delta = 0,
               },
-              [6] = {
-                win = 1002,
+              [4] = {
+                win = 1001,
                 topline = 0,
-                botline = 2,
+                botline = 1,
                 curline = 0,
                 curcol = 0,
                 linecount = 1,
                 sum_scroll_delta = 0,
               },
             },
-          }
+            win_viewport_margins = {
+              [2] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1000,
+              },
+              [4] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1001,
+              },
+            },
+          })
         else
-          screen:expect {
-            grid = [[
+          screen:expect([[
             looooooooooooooong^                      |
-            {n:one                3info}{1:                }|
-            {n:two                     }{1:                }|
-            {s:looooooooooooooong }{1:                     }|
-            {1:~                                       }|*6
-            {2:-- }{5:match 3 of 3}                         |
-          ]],
-          }
+            {n:one                3info}{100:                }|
+            {n:two                }{100:                     }|
+            {s:looooooooooooooong }{100:                     }|
+            {100:~                                       }|*6
+            {5:-- }{101:match 3 of 3}                         |
+          ]])
         end
+        feed('<C-E><ESC>')
+      end)
 
-        -- preview in left
-        feed('<ESC>cc')
+      it('popup preview placed to left', function()
         insert(('test'):rep(5))
         feed('i<C-x><C-o>')
         if multigrid then
-          screen:expect {
+          screen:expect({
             grid = [[
-          ## grid 1
-            [2:----------------------------------------]|*10
-            [3:----------------------------------------]|
-          ## grid 2
-            itesttesttesttesttesone^t                |
-            {1:~                                       }|*9
-          ## grid 3
-            {2:-- }{5:match 1 of 3}                         |
-          ## grid 5
-            {s: one                }|
-            {n: two                }|
-            {n: looooooooooooooong }|
-          ## grid 7
-            {n:1info}|
-            {n:     }|
-          ]],
+            ## grid 1
+              [2:----------------------------------------]|*10
+              [3:----------------------------------------]|
+            ## grid 2
+              testtesttesttesttesone^t                 |
+              {100:~                                       }|*9
+            ## grid 3
+              {5:-- }{101:match 1 of 3}                         |
+            ## grid 4
+              {n:1info}|
+            ## grid 5
+              {s: one                }|
+              {n: two                }|
+              {n: looooooooooooooong }|
+            ]],
+            win_pos = {
+              [2] = {
+                height = 10,
+                startcol = 0,
+                startrow = 0,
+                width = 40,
+                win = 1000,
+              },
+            },
             float_pos = {
-              [7] = { 1003, 'NW', 1, 1, 14, false, 50 },
-              [5] = { -1, 'NW', 2, 1, 19, false, 100 },
+              [5] = { -1, 'NW', 2, 1, 18, false, 100 },
+              [4] = { 1001, 'NW', 1, 1, 13, false, 50 },
             },
             win_viewport = {
               [2] = {
@@ -1821,33 +2304,241 @@ describe('builtin popupmenu', function()
                 topline = 0,
                 botline = 2,
                 curline = 0,
-                curcol = 23,
+                curcol = 22,
                 linecount = 1,
                 sum_scroll_delta = 0,
               },
-              [7] = {
-                win = 1003,
+              [4] = {
+                win = 1001,
                 topline = 0,
-                botline = 2,
+                botline = 1,
                 curline = 0,
                 curcol = 0,
                 linecount = 1,
                 sum_scroll_delta = 0,
               },
             },
-          }
+            win_viewport_margins = {
+              [2] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1000,
+              },
+              [4] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1001,
+              },
+            },
+          })
         else
-          screen:expect {
-            grid = [[
-            itesttesttesttesttesone^t                |
-            {1:~             }{n:1info}{s: one                }{1: }|
-            {1:~             }{n:      two                }{1: }|
-            {1:~                  }{n: looooooooooooooong }{1: }|
-            {1:~                                       }|*6
-            {2:-- }{5:match 1 of 3}                         |
-          ]],
-          }
+          screen:expect([[
+            testtesttesttesttesone^t                 |
+            {100:~            }{n:1info}{s: one                }{100:  }|
+            {100:~                 }{n: two                }{100:  }|
+            {100:~                 }{n: looooooooooooooong }{100:  }|
+            {100:~                                       }|*6
+            {5:-- }{101:match 1 of 3}                         |
+          ]])
         end
+        feed('<C-E><Esc>')
+      end)
+
+      it('works when scroll with treesitter highlight', function()
+        command('call TestTs()')
+        feed('S<C-x><C-o>')
+        if multigrid then
+          screen:expect({
+            grid = [[
+            ## grid 1
+              [2:----------------------------------------]|*10
+              [3:----------------------------------------]|
+            ## grid 2
+              one^                                     |
+              {100:~                                       }|*9
+            ## grid 3
+              {5:-- }{101:match 1 of 3}                         |
+            ## grid 4
+              {mn:```}{105:lua}{n:         }|
+              {105:function}{mn: }{106:test}{107:()}|
+              {mn:  }{107:print(}{108:'foo'}{107:)}{n: }|
+              {105:end}{n:            }|
+              {mn:```}{n:            }|
+            ## grid 5
+              {s:one                }|
+              {n:two                }|
+              {n:looooooooooooooong }|
+            ]],
+            win_pos = {
+              [2] = {
+                height = 10,
+                startcol = 0,
+                startrow = 0,
+                width = 40,
+                win = 1000,
+              },
+            },
+            float_pos = {
+              [5] = { -1, 'NW', 2, 1, 0, false, 100 },
+              [4] = { 1001, 'NW', 1, 1, 19, false, 50 },
+            },
+            win_viewport = {
+              [2] = {
+                win = 1000,
+                topline = 0,
+                botline = 2,
+                curline = 0,
+                curcol = 3,
+                linecount = 1,
+                sum_scroll_delta = 0,
+              },
+              [4] = {
+                win = 1001,
+                topline = 0,
+                botline = 5,
+                curline = 0,
+                curcol = 0,
+                linecount = 5,
+                sum_scroll_delta = 0,
+              },
+            },
+            win_viewport_margins = {
+              [2] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1000,
+              },
+              [4] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1001,
+              },
+            },
+          })
+        else
+          screen:expect([[
+            one^                                     |
+            {s:one                }{mn:```}{105:lua}{n:         }{100:      }|
+            {n:two                }{105:function}{mn: }{106:test}{107:()}{100:      }|
+            {n:looooooooooooooong }{mn:  }{107:print(}{108:'foo'}{107:)}{n: }{100:      }|
+            {100:~                  }{105:end}{n:            }{100:      }|
+            {100:~                  }{mn:```}{n:            }{100:      }|
+            {100:~                                       }|*4
+            {5:-- }{101:match 1 of 3}                         |
+        ]])
+        end
+        feed('<C-E><ESC>')
+      end)
+
+      it('avoid modified original info text #test', function()
+        command('call Append_multipe()')
+        feed('S<C-x><C-o><C-P><C-P>')
+        if multigrid then
+          screen:expect({
+            grid = [[
+            ## grid 1
+              [2:----------------------------------------]|*10
+              [3:----------------------------------------]|
+            ## grid 2
+              for .. ipairs^                           |
+              {100:~                                       }|*9
+            ## grid 3
+              {5:-- }{101:match 1 of 4}                         |
+            ## grid 4
+              {n:one                }|
+              {n:two                }|
+              {n:looooooooooooooong }|
+              {s:for .. ipairs      }|
+            ## grid 5
+              {n:```lua              }|
+              {n:for index, value in }|
+              {n:ipairs(t) do        }|
+              {n:                    }|
+              {n:end                 }|
+              {n:```                 }|
+            ]],
+            win_pos = {
+              [2] = {
+                height = 10,
+                startcol = 0,
+                startrow = 0,
+                width = 40,
+                win = 1000,
+              },
+            },
+            float_pos = {
+              [5] = { 1001, 'NW', 1, 1, 19, false, 50 },
+              [4] = { -1, 'NW', 2, 1, 0, false, 100 },
+            },
+            win_viewport = {
+              [2] = {
+                win = 1000,
+                topline = 0,
+                botline = 2,
+                curline = 0,
+                curcol = 13,
+                linecount = 1,
+                sum_scroll_delta = 0,
+              },
+              [5] = {
+                win = 1001,
+                topline = 0,
+                botline = 5,
+                curline = 0,
+                curcol = 0,
+                linecount = 5,
+                sum_scroll_delta = 0,
+              },
+            },
+            win_viewport_margins = {
+              [2] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1000,
+              },
+              [5] = {
+                bottom = 0,
+                left = 0,
+                right = 0,
+                top = 0,
+                win = 1001,
+              },
+            },
+          })
+        else
+          screen:expect([[
+            for .. ipairs^                           |
+            {n:one                ```lua              }{100: }|
+            {n:two                for index, value in }{100: }|
+            {n:looooooooooooooong ipairs(t) do        }{100: }|
+            {s:for .. ipairs      }{n:                    }{100: }|
+            {100:~                  }{n:end                 }{100: }|
+            {100:~                  }{n:```                 }{100: }|
+            {100:~                                       }|*3
+            {5:-- }{101:match 1 of 4}                         |
+          ]])
+        end
+
+        feed('<C-N><C-N><C-N><C-N><C-N>')
+        if not multigrid then
+          screen:expect_unchanged()
+        end
+        feed('<C-E><ESC>')
+      end)
+
+      it('popup info window reuses bufnr', function()
+        feed('S<C-x><C-o><C-N>')
+        eq(1, n.eval([[len(uniq(copy(g:bufnrs))) == 1]]))
       end)
     end)
 
@@ -2056,13 +2747,12 @@ describe('builtin popupmenu', function()
       end
     end)
 
-    if not multigrid then
-      it('with split and scroll', function()
-        screen:try_resize(60, 14)
-        command('split')
-        command('set completeopt+=noinsert')
-        command('set mouse=a')
-        insert([[
+    it('with split and scroll', function()
+      screen:try_resize(60, 14)
+      command('split')
+      command('set completeopt+=noinsert')
+      command('set mouse=a')
+      insert([[
           Lorem ipsum dolor sit amet, consectetur
           adipisicing elit, sed do eiusmod tempor
           incididunt ut labore et dolore magna aliqua.
@@ -2074,14 +2764,42 @@ describe('builtin popupmenu', function()
           occaecat cupidatat non proident, sunt in culpa
           qui officia deserunt mollit anim id est
           laborum.
-        ]])
+        .
+      ]])
 
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 3
+                                                                        |
+          ## grid 4
+              dolore eu fugiat nulla pariatur. Excepteur sint           |
+              occaecat cupidatat non proident, sunt in culpa            |
+              qui officia deserunt mollit anim id est                   |
+              laborum.                                                  |
+            .                                                           |
+            ^                                                            |
+          ]],
+        })
+      else
         screen:expect([[
-            reprehenderit in voluptate velit esse cillum              |
             dolore eu fugiat nulla pariatur. Excepteur sint           |
             occaecat cupidatat non proident, sunt in culpa            |
             qui officia deserunt mollit anim id est                   |
             laborum.                                                  |
+          .                                                           |
           ^                                                            |
           {4:[No Name] [+]                                               }|
             Lorem ipsum dolor sit amet, consectetur                   |
@@ -2092,8 +2810,52 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
                                                                       |
         ]])
+      end
 
-        feed('ggOEst <c-x><c-p>')
+      feed('ggOEst <c-x><c-p>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+            Est                                                         |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
+          ## grid 4
+            Est ^                                                        |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: sunt           }{s: }|
+            {n: in             }{s: }|
+            {n: culpa          }{s: }|
+            {n: qui            }{s: }|
+            {n: officia        }{s: }|
+            {n: deserunt       }{s: }|
+            {n: mollit         }{s: }|
+            {n: anim           }{s: }|
+            {n: id             }{s: }|
+            {n: est            }{s: }|
+            {n: laborum        }{c: }|
+            {s: Est            }{c: }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Est ^                                                        |
             L{n: sunt           }{s: }sit amet, consectetur                   |
@@ -2110,7 +2872,52 @@ describe('builtin popupmenu', function()
           {3:[No}{s: Est            }{c: }{3:                                        }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
         ]])
+      end
 
+      if multigrid then
+        api.nvim_input_mouse('wheel', 'down', '', 2, 9, 33)
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
+          ## grid 4
+            Est ^                                                        |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: sunt           }{s: }|
+            {n: in             }{s: }|
+            {n: culpa          }{s: }|
+            {n: qui            }{s: }|
+            {n: officia        }{s: }|
+            {n: deserunt       }{s: }|
+            {n: mollit         }{s: }|
+            {n: anim           }{s: }|
+            {n: id             }{s: }|
+            {n: est            }{s: }|
+            {n: laborum        }{c: }|
+            {s: Est            }{c: }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         api.nvim_input_mouse('wheel', 'down', '', 0, 9, 40)
         screen:expect([[
           Est ^                                                        |
@@ -2128,8 +2935,50 @@ describe('builtin popupmenu', function()
           {3:[No}{s: Est            }{c: }{3:                                        }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
         ]])
+      end
 
-        feed('e')
+      feed('e')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
+          ## grid 4
+            Est e^                                                       |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: elit           }|
+            {n: eiusmod        }|
+            {n: et             }|
+            {n: enim           }|
+            {n: exercitation   }|
+            {n: ex             }|
+            {n: ea             }|
+            {n: esse           }|
+            {n: eu             }|
+            {s: est            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Est e^                                                       |
             L{n: elit           } sit amet, consectetur                   |
@@ -2146,7 +2995,50 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
         ]])
+      end
 
+      if multigrid then
+        api.nvim_input_mouse('wheel', 'up', '', 2, 9, 33)
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+            Est e                                                       |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
+          ## grid 4
+            Est e^                                                       |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: elit           }|
+            {n: eiusmod        }|
+            {n: et             }|
+            {n: enim           }|
+            {n: exercitation   }|
+            {n: ex             }|
+            {n: ea             }|
+            {n: esse           }|
+            {n: eu             }|
+            {s: est            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         api.nvim_input_mouse('wheel', 'up', '', 0, 9, 40)
         screen:expect([[
           Est e^                                                       |
@@ -2164,8 +3056,42 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
         ]])
+      end
 
-        feed('s')
+      feed('s')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+            Est es                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
+          ## grid 4
+            Est es^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: esse           }|
+            {s: est            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Est es^                                                      |
             L{n: esse           } sit amet, consectetur                   |
@@ -2182,7 +3108,42 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
         ]])
+      end
 
+      if multigrid then
+        api.nvim_input_mouse('wheel', 'down', '', 2, 9, 33)
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
+          ## grid 4
+            Est es^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: esse           }|
+            {s: est            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         api.nvim_input_mouse('wheel', 'down', '', 0, 9, 40)
         screen:expect([[
           Est es^                                                      |
@@ -2200,8 +3161,50 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
         ]])
+      end
 
-        feed('<bs>')
+      feed('<bs>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
+          ## grid 4
+            Est e^                                                       |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: elit           }|
+            {n: eiusmod        }|
+            {n: et             }|
+            {n: enim           }|
+            {n: exercitation   }|
+            {n: ex             }|
+            {n: ea             }|
+            {n: esse           }|
+            {n: eu             }|
+            {s: est            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Est e^                                                       |
             L{n: elit           } sit amet, consectetur                   |
@@ -2218,8 +3221,50 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 65}            |
         ]])
+      end
 
-        feed('<c-p>')
+      feed('<c-p>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 22 of 65}           |
+          ## grid 4
+            Est eu^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: elit           }|
+            {n: eiusmod        }|
+            {n: et             }|
+            {n: enim           }|
+            {n: exercitation   }|
+            {n: ex             }|
+            {n: ea             }|
+            {n: esse           }|
+            {s: eu             }|
+            {n: est            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Est eu^                                                      |
             L{n: elit           } sit amet, consectetur                   |
@@ -2236,7 +3281,50 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 22 of 65}           |
         ]])
+      end
 
+      if multigrid then
+        api.nvim_input_mouse('wheel', 'down', '', 2, 9, 33)
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+              dolore eu fugiat nulla pariatur. Excepteur sint           |
+              occaecat cupidatat non proident, sunt in culpa            |
+              qui officia deserunt mollit anim id est                   |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 22 of 65}           |
+          ## grid 4
+            Est eu^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: elit           }|
+            {n: eiusmod        }|
+            {n: et             }|
+            {n: enim           }|
+            {n: exercitation   }|
+            {n: ex             }|
+            {n: ea             }|
+            {n: esse           }|
+            {s: eu             }|
+            {n: est            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 3, false, 100 },
+          },
+        })
+      else
         api.nvim_input_mouse('wheel', 'down', '', 0, 9, 40)
         screen:expect([[
           Est eu^                                                      |
@@ -2254,8 +3342,49 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 22 of 65}           |
         ]])
+      end
 
-        fn.complete(4, { 'ea', 'eeeeeeeeeeeeeeeeee', 'ei', 'eo', 'eu', 'ey', 'eå', 'eä', 'eö' })
+      fn.complete(4, { 'ea', 'eeeeeeeeeeeeeeeeee', 'ei', 'eo', 'eu', 'ey', 'eå', 'eä', 'eö' })
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+              dolore eu fugiat nulla pariatur. Excepteur sint           |
+              occaecat cupidatat non proident, sunt in culpa            |
+              qui officia deserunt mollit anim id est                   |
+          ## grid 3
+            {2:-- Keyword Local completion (^N^P) }{5:match 1 of 9}             |
+          ## grid 4
+            Est eu^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {s: ea                 }|
+            {n: eeeeeeeeeeeeeeeeee }|
+            {n: ei                 }|
+            {n: eo                 }|
+            {n: eu                 }|
+            {n: ey                 }|
+            {n: eå                 }|
+            {n: eä                 }|
+            {n: eö                 }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 2, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Est eu^                                                      |
             {s: ea                 }t amet, consectetur                   |
@@ -2272,8 +3401,49 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- Keyword Local completion (^N^P) }{5:match 1 of 9}             |
         ]])
+      end
 
-        fn.complete(4, { 'ea', 'eee', 'ei', 'eo', 'eu', 'ey', 'eå', 'eä', 'eö' })
+      fn.complete(4, { 'ea', 'eee', 'ei', 'eo', 'eu', 'ey', 'eå', 'eä', 'eö' })
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+              dolore eu fugiat nulla pariatur. Excepteur sint           |
+              occaecat cupidatat non proident, sunt in culpa            |
+              qui officia deserunt mollit anim id est                   |
+          ## grid 3
+            {2:-- INSERT --}                                                |
+          ## grid 4
+            Est eu^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {s: ea             }|
+            {n: eee            }|
+            {n: ei             }|
+            {n: eo             }|
+            {n: eu             }|
+            {n: ey             }|
+            {n: eå             }|
+            {n: eä             }|
+            {n: eö             }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 2, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Est eu^                                                      |
             {s: ea             }r sit amet, consectetur                   |
@@ -2290,8 +3460,49 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- INSERT --}                                                |
         ]])
+      end
 
-        feed('<c-n>')
+      feed('<c-n>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+              dolore eu fugiat nulla pariatur. Excepteur sint           |
+              occaecat cupidatat non proident, sunt in culpa            |
+              qui officia deserunt mollit anim id est                   |
+          ## grid 3
+            {2:-- INSERT --}                                                |
+          ## grid 4
+            Esteee^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {n: ea             }|
+            {s: eee            }|
+            {n: ei             }|
+            {n: eo             }|
+            {n: eu             }|
+            {n: ey             }|
+            {n: eå             }|
+            {n: eä             }|
+            {n: eö             }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 2, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Esteee^                                                      |
             {n: ea             }r sit amet, consectetur                   |
@@ -2308,8 +3519,42 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- INSERT --}                                                |
         ]])
+      end
 
-        fn.complete(6, { 'foo', 'bar' })
+      fn.complete(6, { 'foo', 'bar' })
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+              dolore eu fugiat nulla pariatur. Excepteur sint           |
+              occaecat cupidatat non proident, sunt in culpa            |
+              qui officia deserunt mollit anim id est                   |
+          ## grid 3
+            {2:-- INSERT --}                                                |
+          ## grid 4
+            Esteee^                                                      |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ## grid 5
+            {s: foo            }|
+            {n: bar            }|
+          ]],
+          float_pos = {
+            [5] = { -1, 'NW', 4, 1, 4, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           Esteee^                                                      |
             Lo{s: foo            }sit amet, consectetur                   |
@@ -2326,8 +3571,36 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- INSERT --}                                                |
         ]])
+      end
 
-        feed('<c-y>')
+      feed('<c-y>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [4:------------------------------------------------------------]|*6
+            {4:[No Name] [+]                                               }|
+            [2:------------------------------------------------------------]|*5
+            {3:[No Name] [+]                                               }|
+            [3:------------------------------------------------------------]|
+          ## grid 2
+              ea commodo consequat. Duis aute irure dolor in            |
+              reprehenderit in voluptate velit esse cillum              |
+              dolore eu fugiat nulla pariatur. Excepteur sint           |
+              occaecat cupidatat non proident, sunt in culpa            |
+              qui officia deserunt mollit anim id est                   |
+          ## grid 3
+            {2:-- INSERT --}                                                |
+          ## grid 4
+            Esteefoo^                                                    |
+              Lorem ipsum dolor sit amet, consectetur                   |
+              adipisicing elit, sed do eiusmod tempor                   |
+              incididunt ut labore et dolore magna aliqua.              |
+              Ut enim ad minim veniam, quis nostrud                     |
+              exercitation ullamco laboris nisi ut aliquip ex           |
+          ]],
+        })
+      else
         screen:expect([[
           Esteefoo^                                                    |
             Lorem ipsum dolor sit amet, consectetur                   |
@@ -2344,13 +3617,36 @@ describe('builtin popupmenu', function()
           {3:[No Name] [+]                                               }|
           {2:-- INSERT --}                                                |
         ]])
-      end)
+      end
+    end)
 
-      it('can be moved due to wrap or resize', function()
-        feed('isome long prefix before the ')
-        command('set completeopt+=noinsert,noselect')
-        command('set linebreak')
-        fn.complete(29, { 'word', 'choice', 'text', 'thing' })
+    it('can be moved due to wrap or resize', function()
+      feed('isome long prefix before the ')
+      command('set completeopt+=noinsert,noselect')
+      command('set linebreak')
+      fn.complete(29, { 'word', 'choice', 'text', 'thing' })
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+            some long prefix before the ^    |
+            {1:~                               }|*18
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ## grid 4
+            {n: word  }|
+            {n: choice}|
+            {n: text  }|
+            {n: thing }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 25, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix before the ^    |
           {1:~                        }{n: word  }|
@@ -2360,8 +3656,32 @@ describe('builtin popupmenu', function()
           {1:~                               }|*14
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        feed('<c-p>')
+      feed('<c-p>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+            some long prefix before the     |
+            thing^                           |
+            {1:~                               }|*17
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ## grid 4
+            {n:word           }|
+            {n:choice         }|
+            {n:text           }|
+            {s:thing          }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 2, 0, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix before the     |
           thing^                           |
@@ -2372,8 +3692,32 @@ describe('builtin popupmenu', function()
           {1:~                               }|*13
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        feed('<c-p>')
+      feed('<c-p>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+            some long prefix before the text|
+            {1:^~                               }|
+            {1:~                               }|*17
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ## grid 4
+            {n: word  }|
+            {n: choice}|
+            {s: text  }|
+            {n: thing }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 25, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix before the text|
           {1:^~                        }{n: word  }|
@@ -2383,8 +3727,32 @@ describe('builtin popupmenu', function()
           {1:~                               }|*14
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        screen:try_resize(30, 8)
+      screen:try_resize(30, 8)
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:------------------------------]|*7
+            [3:------------------------------]|
+          ## grid 2
+            some long prefix before the   |
+            text^                          |
+            {1:~                             }|*5
+          ## grid 3
+            {2:-- INSERT --}                  |
+          ## grid 4
+            {n:word           }|
+            {n:choice         }|
+            {s:text           }|
+            {n:thing          }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 2, 0, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix before the   |
           text^                          |
@@ -2395,8 +3763,31 @@ describe('builtin popupmenu', function()
           {1:~                             }|
           {2:-- INSERT --}                  |
         ]])
+      end
 
-        screen:try_resize(50, 8)
+      screen:try_resize(50, 8)
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------------------------]|*7
+            [3:--------------------------------------------------]|
+          ## grid 2
+            some long prefix before the text^                  |
+            {1:~                                                 }|*6
+          ## grid 3
+            {2:-- INSERT --}                                      |
+          ## grid 4
+            {n: word           }|
+            {n: choice         }|
+            {s: text           }|
+            {n: thing          }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 27, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix before the text^                  |
           {1:~                          }{n: word           }{1:       }|
@@ -2406,8 +3797,32 @@ describe('builtin popupmenu', function()
           {1:~                                                 }|*2
           {2:-- INSERT --}                                      |
         ]])
+      end
 
-        screen:try_resize(25, 10)
+      screen:try_resize(25, 10)
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:-------------------------]|*9
+            [3:-------------------------]|
+          ## grid 2
+            some long prefix before  |
+            the text^                 |
+            {1:~                        }|*7
+          ## grid 3
+            {2:-- INSERT --}             |
+          ## grid 4
+            {n: word           }|
+            {n: choice         }|
+            {s: text           }|
+            {n: thing          }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 2, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix before  |
           the text^                 |
@@ -2418,8 +3833,33 @@ describe('builtin popupmenu', function()
           {1:~                        }|*3
           {2:-- INSERT --}             |
         ]])
+      end
 
-        screen:try_resize(12, 5)
+      screen:try_resize(12, 5)
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:------------]|*4
+            [3:------------]|
+          ## grid 2
+            some long   |
+            prefix      |
+            before the  |
+            text^        |
+          ## grid 3
+            {2:-- INSERT --}|
+          ## grid 4
+            {n: word           }|
+            {n: choice         }|
+            {s: text           }|
+            {n: thing          }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 2, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long   |
           prefix      |
@@ -2427,16 +3867,62 @@ describe('builtin popupmenu', function()
           tex{n: }^        |
           {2:-- INSERT --}|
         ]])
+      end
 
-        -- can't draw the pum, but check we don't crash
-        screen:try_resize(12, 2)
+      -- can't draw the pum, but check we don't crash
+      screen:try_resize(12, 2)
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:------------]|
+            [3:------------]|
+          ## grid 2
+            {1:<<<}t^        |
+          ## grid 3
+            {2:-- INSERT --}|
+          ## grid 4
+            {n: word           }|
+            {n: choice         }|
+            {s: text           }|
+            {n: thing          }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 2, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           {1:<<<}t^        |
           {2:-- INSERT --}|
         ]])
+      end
 
-        -- but state is preserved, pum reappears
-        screen:try_resize(20, 8)
+      -- but state is preserved, pum reappears
+      screen:try_resize(20, 8)
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------]|*7
+            [3:--------------------]|
+          ## grid 2
+            some long prefix    |
+            before the text^     |
+            {1:~                   }|*5
+          ## grid 3
+            {2:-- INSERT --}        |
+          ## grid 4
+            {n: word    }|
+            {n: choice  }|
+            {s: text    }|
+            {n: thing   }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 2, 10, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix    |
           before the text^     |
@@ -2447,14 +3933,37 @@ describe('builtin popupmenu', function()
           {1:~                   }|
           {2:-- INSERT --}        |
         ]])
-      end)
+      end
+    end)
 
-      it('with VimResized autocmd', function()
-        feed('isome long prefix before the ')
-        command('set completeopt+=noinsert,noselect')
-        command('autocmd VimResized * redraw!')
-        command('set linebreak')
-        fn.complete(29, { 'word', 'choice', 'text', 'thing' })
+    it('with VimResized autocmd', function()
+      feed('isome long prefix before the ')
+      command('set completeopt+=noinsert,noselect')
+      command('autocmd VimResized * redraw!')
+      command('set linebreak')
+      fn.complete(29, { 'word', 'choice', 'text', 'thing' })
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+            some long prefix before the ^    |
+            {1:~                               }|*18
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ## grid 4
+            {n: word  }|
+            {n: choice}|
+            {n: text  }|
+            {n: thing }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 25, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long prefix before the ^    |
           {1:~                        }{n: word  }|
@@ -2464,8 +3973,33 @@ describe('builtin popupmenu', function()
           {1:~                               }|*14
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        screen:try_resize(16, 10)
+      screen:try_resize(16, 10)
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:----------------]|*9
+            [3:----------------]|
+          ## grid 2
+            some long       |
+            prefix before   |
+            the ^            |
+            {1:~               }|*6
+          ## grid 3
+            {2:-- INSERT --}    |
+          ## grid 4
+            {n: word        }|
+            {n: choice      }|
+            {n: text        }|
+            {n: thing       }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 3, 3, false, 100 },
+          },
+        })
+      else
         screen:expect([[
           some long       |
           prefix before   |
@@ -2477,19 +4011,57 @@ describe('builtin popupmenu', function()
           {1:~               }|*2
           {2:-- INSERT --}    |
         ]])
-      end)
+      end
+    end)
 
-      it('with rightleft window', function()
-        command('set rl wildoptions+=pum')
-        feed('isome rightleft ')
+    it('with rightleft window', function()
+      command('set rl wildoptions+=pum')
+      feed('isome rightleft ')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+                            ^  tfelthgir emos|
+            {1:                               ~}|*18
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ]],
+        })
+      else
         screen:expect([[
                           ^  tfelthgir emos|
           {1:                               ~}|*18
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        command('set completeopt+=noinsert,noselect')
-        fn.complete(16, { 'word', 'choice', 'text', 'thing' })
+      command('set completeopt+=noinsert,noselect')
+      fn.complete(16, { 'word', 'choice', 'text', 'thing' })
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+                            ^  tfelthgir emos|
+            {1:                               ~}|*18
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ## grid 4
+            {n:           drow }|
+            {n:         eciohc }|
+            {n:           txet }|
+            {n:          gniht }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 2, false, 100 },
+          },
+        })
+      else
         screen:expect([[
                           ^  tfelthgir emos|
           {1:  }{n:           drow }{1:             ~}|
@@ -2499,8 +4071,31 @@ describe('builtin popupmenu', function()
           {1:                               ~}|*14
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        feed('<c-n>')
+      feed('<c-n>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+                        ^ drow tfelthgir emos|
+            {1:                               ~}|*18
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ## grid 4
+            {s:           drow }|
+            {n:         eciohc }|
+            {n:           txet }|
+            {n:          gniht }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 2, false, 100 },
+          },
+        })
+      else
         screen:expect([[
                       ^ drow tfelthgir emos|
           {1:  }{s:           drow }{1:             ~}|
@@ -2510,16 +4105,46 @@ describe('builtin popupmenu', function()
           {1:                               ~}|*14
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        feed('<c-y>')
+      feed('<c-y>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+                        ^ drow tfelthgir emos|
+            {1:                               ~}|*18
+          ## grid 3
+            {2:-- INSERT --}                    |
+          ]],
+        })
+      else
         screen:expect([[
                       ^ drow tfelthgir emos|
           {1:                               ~}|*18
           {2:-- INSERT --}                    |
         ]])
+      end
 
-        -- not rightleft on the cmdline
-        feed('<esc>:sign ')
+      -- not rightleft on the cmdline
+      feed('<esc>:sign ')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+                         drow tfelthgir emos|
+            {1:                               ~}|*18
+          ## grid 3
+            :sign ^                          |
+          ]],
+        })
+      else
         screen:expect {
           grid = [[
                        drow tfelthgir emos|
@@ -2527,8 +4152,34 @@ describe('builtin popupmenu', function()
           :sign ^                          |
         ]],
         }
+      end
 
-        feed('<tab>')
+      -- oldtest: Test_wildmenu_pum_rightleft()
+      feed('<tab>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------]|*19
+            [3:--------------------------------]|
+          ## grid 2
+                         drow tfelthgir emos|
+            {1:                               ~}|*18
+          ## grid 3
+            :sign define^                    |
+          ## grid 4
+            {s: define         }|
+            {n: jump           }|
+            {n: list           }|
+            {n: place          }|
+            {n: undefine       }|
+            {n: unplace        }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'SW', 1, 19, 5, false, 250 },
+          },
+        })
+      else
         screen:expect {
           grid = [[
                        drow tfelthgir emos|
@@ -2542,8 +4193,8 @@ describe('builtin popupmenu', function()
           :sign define^                    |
         ]],
         }
-      end)
-    end
+      end
+    end)
 
     it('with rightleft vsplits', function()
       screen:try_resize(40, 6)
@@ -2917,11 +4568,12 @@ describe('builtin popupmenu', function()
         feed('<C-U>sign define <Tab>')
         screen:expect([[
                                           |
-          {1:~                               }|*2
+          {1:~                               }|
           {1:~           }{s: culhl=         }{1:    }|
           {1:~           }{n: icon=          }{1:    }|
           {1:~           }{n: linehl=        }{1:    }|
           {1:~           }{n: numhl=         }{1:    }|
+          {1:~           }{n: priority=      }{1:    }|
           {1:~           }{n: text=          }{1:    }|
           {1:~           }{n: texthl=        }{1:    }|
           :sign define culhl=^             |
@@ -2930,11 +4582,12 @@ describe('builtin popupmenu', function()
         feed('<Space><Tab>')
         screen:expect([[
                                           |
-          {1:~                               }|*2
+          {1:~                               }|
           {1:~                  }{s: culhl=     }{1: }|
           {1:~                  }{n: icon=      }{1: }|
           {1:~                  }{n: linehl=    }{1: }|
           {1:~                  }{n: numhl=     }{1: }|
+          {1:~                  }{n: priority=  }{1: }|
           {1:~                  }{n: text=      }{1: }|
           {1:~                  }{n: texthl=    }{1: }|
           :sign define culhl= culhl=^      |
@@ -3349,13 +5002,30 @@ describe('builtin popupmenu', function()
           :e compdir/file1^                                  |
         ]])
       end)
+    end
 
-      it('wildoptions=pum with scrolled messages', function()
-        screen:try_resize(40, 10)
-        command('set wildmenu')
-        command('set wildoptions=pum')
+    it('wildoptions=pum with scrolled messages', function()
+      screen:try_resize(40, 10)
+      command('set wildmenu')
+      command('set wildoptions=pum')
 
-        feed(':echoerr "fail"|echoerr "error"<cr>')
+      feed(':echoerr "fail"|echoerr "error"<cr>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:----------------------------------------]|*7
+            [3:----------------------------------------]|*3
+          ## grid 2
+                                                    |
+            {1:~                                       }|*8
+          ## grid 3
+            {6:fail}                                    |
+            {6:error}                                   |
+            {5:Press ENTER or type command to continue}^ |
+          ]],
+        })
+      else
         screen:expect {
           grid = [[
                                                   |
@@ -3366,8 +5036,35 @@ describe('builtin popupmenu', function()
           {5:Press ENTER or type command to continue}^ |
         ]],
         }
+      end
 
-        feed(':sign <tab>')
+      feed(':sign <tab>')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:----------------------------------------]|*7
+            [3:----------------------------------------]|*3
+          ## grid 2
+                                                    |
+            {1:~                                       }|*8
+          ## grid 3
+            {6:fail}                                    |
+            {6:error}                                   |
+            :sign define^                            |
+          ## grid 4
+            {s: define         }|
+            {n: jump           }|
+            {n: list           }|
+            {n: place          }|
+            {n: undefine       }|
+            {n: unplace        }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'SW', 1, 9, 5, false, 250 },
+          },
+        })
+      else
         screen:expect {
           grid = [[
                                                   |
@@ -3381,8 +5078,25 @@ describe('builtin popupmenu', function()
           :sign define^                            |
         ]],
         }
+      end
 
-        feed('d')
+      feed('d')
+      if multigrid then
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:----------------------------------------]|*7
+            [3:----------------------------------------]|*3
+          ## grid 2
+                                                    |
+            {1:~                                       }|*8
+          ## grid 3
+            {6:fail}                                    |
+            {6:error}                                   |
+            :sign defined^                           |
+          ]],
+        })
+      else
         screen:expect {
           grid = [[
                                                   |
@@ -3393,8 +5107,10 @@ describe('builtin popupmenu', function()
           :sign defined^                           |
         ]],
         }
-      end)
+      end
+    end)
 
+    if not multigrid then
       it('wildoptions=pum and wildmode=longest,full #11622', function()
         screen:try_resize(30, 8)
         command('set wildmenu')
@@ -3547,6 +5263,141 @@ describe('builtin popupmenu', function()
                                         |
         ]])
       end)
+
+      -- oldtest: Test_wildmenu_pum_hl_match()
+      it('highlighting matched text in cmdline pum', function()
+        exec([[
+          set wildoptions=pum,fuzzy
+          hi PmenuMatchSel  guifg=Blue guibg=Grey
+          hi PmenuMatch     guifg=Blue guibg=Plum1
+        ]])
+
+        feed(':sign plc<Tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|*16
+          {1:~    }{s: }{ms:pl}{s:a}{ms:c}{s:e          }{1:           }|
+          {1:~    }{n: un}{mn:pl}{n:a}{mn:c}{n:e        }{1:           }|
+          :sign place^                     |
+        ]])
+        feed('<Tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|*16
+          {1:~    }{n: }{mn:pl}{n:a}{mn:c}{n:e          }{1:           }|
+          {1:~    }{s: un}{ms:pl}{s:a}{ms:c}{s:e        }{1:           }|
+          :sign unplace^                   |
+        ]])
+        feed('<Tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|*16
+          {1:~    }{n: }{mn:pl}{n:a}{mn:c}{n:e          }{1:           }|
+          {1:~    }{n: un}{mn:pl}{n:a}{mn:c}{n:e        }{1:           }|
+          :sign plc^                       |
+        ]])
+        feed('<Esc>')
+        command('set wildoptions-=fuzzy')
+        feed(':sign un<Tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|*16
+          {1:~    }{s: }{ms:un}{s:define       }{1:           }|
+          {1:~    }{n: }{mn:un}{n:place        }{1:           }|
+          :sign undefine^                  |
+        ]])
+        feed('<Tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|*16
+          {1:~    }{n: }{mn:un}{n:define       }{1:           }|
+          {1:~    }{s: }{ms:un}{s:place        }{1:           }|
+          :sign unplace^                   |
+        ]])
+        feed('<Tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|*16
+          {1:~    }{n: }{mn:un}{n:define       }{1:           }|
+          {1:~    }{n: }{mn:un}{n:place        }{1:           }|
+          :sign un^                        |
+        ]])
+      end)
+
+      -- oldtest: Test_wildmenu_pum_hl_nonfirst()
+      it('highlight matched text in the middle in cmdline pum', function()
+        exec([[
+          set wildoptions=pum wildchar=<tab> wildmode=noselect,full
+          hi PmenuMatchSel  guifg=Blue guibg=Grey
+          hi PmenuMatch     guifg=Blue guibg=Plum1
+          func T(a, c, p)
+            return ["oneA", "o neBneB", "aoneC"]
+          endfunc
+          command -nargs=1 -complete=customlist,T MyCmd
+        ]])
+
+        feed(':MyCmd ne<tab>')
+        screen:expect([[
+                                          |
+          {1:~                               }|*15
+          {1:~     }{n: o}{mn:ne}{n:A           }{1:          }|
+          {1:~     }{n: o }{mn:ne}{n:BneB       }{1:          }|
+          {1:~     }{n: ao}{mn:ne}{n:C          }{1:          }|
+          :MyCmd ne^                       |
+        ]])
+      end)
+
+      it(
+        'cascading highlights for matched text (PmenuMatch, PmenuMatchSel) in cmdline pum',
+        function()
+          screen:add_extra_attr_ids {
+            [100] = {
+              background = Screen.colors.Grey,
+              italic = true,
+              underline = true,
+              foreground = Screen.colors.White,
+            },
+            [101] = {
+              strikethrough = true,
+              foreground = Screen.colors.Grey0,
+              italic = true,
+              bold = true,
+              underline = true,
+              background = Screen.colors.White,
+            },
+            [102] = {
+              strikethrough = true,
+              foreground = Screen.colors.Red,
+              italic = true,
+              underline = true,
+              background = Screen.colors.Grey,
+            },
+            [103] = {
+              foreground = Screen.colors.Yellow,
+              italic = true,
+              bold = true,
+              underline = true,
+              background = Screen.colors.Pink,
+            },
+          }
+          exec([[
+            set wildoptions=pum,fuzzy
+            hi Pmenu          guifg=White guibg=Grey gui=underline,italic
+            hi PmenuSel       guifg=Red gui=strikethrough
+            hi PmenuMatch     guifg=Yellow guibg=Pink gui=bold
+            hi PmenuMatchSel  guifg=Black guibg=White
+          ]])
+
+          feed(':sign plc<Tab>')
+          screen:expect([[
+                                            |
+            {1:~                               }|*16
+            {1:~    }{102: }{101:pl}{102:a}{101:c}{102:e          }{1:           }|
+            {1:~    }{100: un}{103:pl}{100:a}{103:c}{100:e        }{1:           }|
+            :sign place^                     |
+          ]])
+        end
+      )
     end
 
     it("'pumheight'", function()
@@ -3718,6 +5569,8 @@ describe('builtin popupmenu', function()
         call setline(1, 'popup menu test')
         set mouse=a mousemodel=popup
 
+        " Delete the default MenuPopup event handler.
+        autocmd! nvim.popupmenu
         aunmenu PopUp
         menu PopUp.foo :let g:menustr = 'foo'<CR>
         menu PopUp.bar :let g:menustr = 'bar'<CR>
@@ -4362,9 +6215,10 @@ describe('builtin popupmenu', function()
           :let g:menustr = 'foo'          |
         ]])
       end
+      local no_menu_screen ---@type string|test.function.ui.screen.Expect
       if multigrid then
         api.nvim_input_mouse('left', 'press', '', 4, 1, 2)
-        screen:expect({
+        no_menu_screen = {
           grid = [[
         ## grid 1
           [2:--------------------------------]|*2
@@ -4383,25 +6237,198 @@ describe('builtin popupmenu', function()
           {2:WINBAR          }|
           ^popup menu test |
         ]],
-        })
+        }
       else
         feed('<LeftMouse><31,2>')
-        screen:expect([[
+        no_menu_screen = {
+          grid = [[
           popup menu test                 |
           {1:~                               }|
           {3:[No Name] [+]                   }|
           popup menu test│{2:WINBAR          }|
           {1:~              }│^popup menu test |
           :let g:menustr = 'bar'          |
-        ]])
+        ]],
+        }
       end
+      screen:expect(no_menu_screen)
       eq('bar', api.nvim_get_var('menustr'))
+
+      local no_sel_screen ---@type string|test.function.ui.screen.Expect
+      if multigrid then
+        no_sel_screen = {
+          grid = [[
+        ## grid 1
+          [2:--------------------------------]|*2
+          {3:[No Name] [+]                   }|
+          [5:---------------]│[6:----------------]|*2
+          [3:--------------------------------]|
+        ## grid 2
+          popup menu test                 |
+          {1:~                               }|
+        ## grid 3
+          :let g:menustr = 'bar'          |
+        ## grid 4
+          {n: foo }|
+          {n: bar }|
+          {n: baz }|
+        ## grid 5
+          popup menu test|
+          {1:~              }|
+        ## grid 6
+          {2:WINBAR          }|
+          ^popup menu test |
+        ]],
+          float_pos = { [4] = { -1, 'NW', 1, 1, 19, false, 250 } },
+        }
+      else
+        no_sel_screen = {
+          grid = [[
+          popup menu test                 |
+          {1:~                  }{n: foo }{1:        }|
+          {3:[No Name] [+]      }{n: bar }{3:        }|
+          popup menu test│{2:WIN}{n: baz }{2:        }|
+          {1:~              }│^popup menu test |
+          :let g:menustr = 'bar'          |
+        ]],
+        }
+      end
+      local sel_screens = {} ---@type (string|test.function.ui.screen.Expect)[]
+      for i, s in ipairs({ 'foo', 'bar', 'baz' }) do
+        local sel_screen = vim.deepcopy(no_sel_screen)
+        local grid = assert(sel_screen.grid)
+        grid = grid:gsub(vim.pesc(('{n: %s }'):format(s)), ('{s: %s }'):format(s))
+        sel_screen.grid = grid
+        sel_screens[i] = sel_screen
+      end
+
+      command([[let g:menustr = '']])
+      local g = multigrid and 1 or 0
+
+      api.nvim_input_mouse('right', 'press', '', g, 0, 20)
+      screen:expect(no_sel_screen)
+      api.nvim_input_mouse('move', '', '', g, 1, 19)
+      screen:expect(sel_screens[1])
+      api.nvim_input_mouse('move', '', '', g, 1, 18)
+      screen:expect(no_sel_screen)
+      api.nvim_input_mouse('move', '', '', g, 2, 23)
+      screen:expect(sel_screens[2])
+      api.nvim_input_mouse('move', '', '', g, 2, 24)
+      screen:expect(no_sel_screen)
+      api.nvim_input_mouse('move', '', '', g, 3, 19)
+      screen:expect(sel_screens[3])
+      api.nvim_input_mouse('left', 'press', '', g, 3, 18)
+      screen:expect(no_menu_screen)
+      eq('', api.nvim_get_var('menustr'))
+
+      command('wincmd t | set rightleft')
+      if multigrid then
+        no_menu_screen = {
+          grid = [[
+        ## grid 1
+          [2:--------------------------------]|*2
+          {4:[No Name] [+]                   }|
+          [5:---------------]│[6:----------------]|*2
+          [3:--------------------------------]|
+        ## grid 2
+                           tset unem pupo^p|
+          {1:                               ~}|
+        ## grid 3
+          :let g:menustr = 'bar'          |
+        ## grid 5
+          popup menu test|
+          {1:~              }|
+        ## grid 6
+          {2:WINBAR          }|
+          popup menu test |
+        ]],
+        }
+      else
+        no_menu_screen = {
+          grid = [[
+                           tset unem pupo^p|
+          {1:                               ~}|
+          {4:[No Name] [+]                   }|
+          popup menu test│{2:WINBAR          }|
+          {1:~              }│popup menu test |
+          :let g:menustr = 'bar'          |
+        ]],
+        }
+      end
+      screen:expect(no_menu_screen)
+
+      if multigrid then
+        no_sel_screen = {
+          grid = [[
+        ## grid 1
+          [2:--------------------------------]|*2
+          {4:[No Name] [+]                   }|
+          [5:---------------]│[6:----------------]|*2
+          [3:--------------------------------]|
+        ## grid 2
+                           tset unem pupo^p|
+          {1:                               ~}|
+        ## grid 3
+          :let g:menustr = 'bar'          |
+        ## grid 4
+          {n: oof }|
+          {n: rab }|
+          {n: zab }|
+        ## grid 5
+          popup menu test|
+          {1:~              }|
+        ## grid 6
+          {2:WINBAR          }|
+          popup menu test |
+        ]],
+          float_pos = { [4] = { -1, 'NW', 1, 1, 17, false, 250 } },
+        }
+      else
+        no_sel_screen = {
+          grid = [[
+                           tset unem pupo^p|
+          {1:                 }{n: oof }{1:         ~}|
+          {4:[No Name] [+]    }{n: rab }{4:          }|
+          popup menu test│{2:W}{n: zab }{2:          }|
+          {1:~              }│popup menu test |
+          :let g:menustr = 'bar'          |
+        ]],
+        }
+      end
+      for i, s in ipairs({ 'oof', 'rab', 'zab' }) do
+        local sel_screen = vim.deepcopy(no_sel_screen)
+        local grid = assert(sel_screen.grid)
+        grid = grid:gsub(vim.pesc(('{n: %s }'):format(s)), ('{s: %s }'):format(s))
+        sel_screen.grid = grid
+        sel_screens[i] = sel_screen
+      end
+
+      api.nvim_input_mouse('right', 'press', '', g, 0, 20)
+      screen:expect(no_sel_screen)
+      api.nvim_input_mouse('move', '', '', g, 1, 21)
+      screen:expect(sel_screens[1])
+      api.nvim_input_mouse('move', '', '', g, 1, 22)
+      screen:expect(no_sel_screen)
+      api.nvim_input_mouse('move', '', '', g, 2, 17)
+      screen:expect(sel_screens[2])
+      api.nvim_input_mouse('move', '', '', g, 2, 16)
+      screen:expect(no_sel_screen)
+      api.nvim_input_mouse('move', '', '', g, 3, 21)
+      screen:expect(sel_screens[3])
+      api.nvim_input_mouse('left', 'press', '', g, 3, 22)
+      screen:expect(no_menu_screen)
+      eq('', api.nvim_get_var('menustr'))
+
+      command('set norightleft')
     end)
 
     if not multigrid then
       -- oldtest: Test_popup_command_dump()
       it(':popup command', function()
         exec([[
+          " Delete the default MenuPopup event handler.
+          autocmd! nvim.popupmenu
+
           func ChangeMenu()
             aunmenu PopUp.&Paste
             nnoremenu 1.40 PopUp.&Paste :echomsg "pasted"<CR>
@@ -4477,6 +6504,27 @@ describe('builtin popupmenu', function()
 
         feed('<Esc>')
 
+        command('set rightleft')
+        feed('/X<CR>:popup PopUp<CR>')
+        screen:expect([[
+                   evif ruof eerht owt eno|
+              evif ruof eerht{7:^X} owt eno dna|
+             {n:             odnU }wt erom eno|
+          {1:   }{n:                  }{1:          ~}|
+          {1:   }{n:            etsaP }{1:          ~}|
+          {1:   }{n:                  }{1:          ~}|
+          {1:   }{n:      droW tceleS }{1:          ~}|
+          {1:   }{n:  ecnetneS tceleS }{1:          ~}|
+          {1:   }{n: hpargaraP tceleS }{1:          ~}|
+          {1:   }{n:      eniL tceleS }{1:          ~}|
+          {1:   }{n:     kcolB tceleS }{1:          ~}|
+          {1:   }{n:       llA tceleS }{1:          ~}|
+          {1:                               ~}|*7
+          :popup PopUp                    |
+        ]])
+        feed('<Esc>')
+        command('set norightleft')
+
         -- Set an <expr> mapping to change a menu entry while it's displayed.
         -- The text should not change but the command does.
         -- Also verify that "changed" shows up, which means the mapping triggered.
@@ -4532,7 +6580,120 @@ describe('builtin popupmenu', function()
 
         feed('<Esc>')
       end)
+    end
 
+    -- oldtest: Test_mouse_popup_position()
+    it('position of right-click menu when clicking near edge', function()
+      screen:try_resize(50, 20)
+      exec([[
+        set mousemodel=popup_setpos
+        " Delete the default MenuPopup event handler.
+        autocmd! nvim.popupmenu
+        aunmenu *
+        source $VIMRUNTIME/menu.vim
+        call setline(1, join(range(20)))
+      ]])
+
+      if multigrid then
+        api.nvim_input_mouse('right', 'press', '', 2, 0, 45 - 1)
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------------------------]|*19
+            [3:--------------------------------------------------]|
+          ## grid 2
+            0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ^18 19 |
+            {1:~                                                 }|*18
+          ## grid 3
+                                                              |
+          ## grid 4
+            {n: Undo            }|
+            {n:                 }|
+            {n: Paste           }|
+            {n:                 }|
+            {n: Select Word     }|
+            {n: Select Sentence }|
+            {n: Select Paragraph}|
+            {n: Select Line     }|
+            {n: Select Block    }|
+            {n: Select All      }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 33, false, 250 },
+          },
+        })
+      else
+        api.nvim_input_mouse('right', 'press', '', 0, 0, 45 - 1)
+        screen:expect([[
+          0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ^18 19 |
+          {1:~                                }{n: Undo            }|
+          {1:~                                }{n:                 }|
+          {1:~                                }{n: Paste           }|
+          {1:~                                }{n:                 }|
+          {1:~                                }{n: Select Word     }|
+          {1:~                                }{n: Select Sentence }|
+          {1:~                                }{n: Select Paragraph}|
+          {1:~                                }{n: Select Line     }|
+          {1:~                                }{n: Select Block    }|
+          {1:~                                }{n: Select All      }|
+          {1:~                                                 }|*8
+                                                            |
+        ]])
+      end
+      feed('<Esc>')
+
+      command('set rightleft')
+      if multigrid then
+        api.nvim_input_mouse('right', 'press', '', 2, 0, 50 - 45)
+        screen:expect({
+          grid = [[
+          ## grid 1
+            [2:--------------------------------------------------]|*19
+            [3:--------------------------------------------------]|
+          ## grid 2
+             91 8^1 71 61 51 41 31 21 11 01 9 8 7 6 5 4 3 2 1 0|
+            {1:                                                 ~}|*18
+          ## grid 3
+                                                              |
+          ## grid 4
+            {n:            odnU }|
+            {n:                 }|
+            {n:           etsaP }|
+            {n:                 }|
+            {n:     droW tceleS }|
+            {n: ecnetneS tceleS }|
+            {n:hpargaraP tceleS }|
+            {n:     eniL tceleS }|
+            {n:    kcolB tceleS }|
+            {n:      llA tceleS }|
+          ]],
+          float_pos = {
+            [4] = { -1, 'NW', 2, 1, 0, false, 250 },
+          },
+        })
+      else
+        api.nvim_input_mouse('right', 'press', '', 0, 0, 50 - 45)
+        screen:expect([[
+           91 8^1 71 61 51 41 31 21 11 01 9 8 7 6 5 4 3 2 1 0|
+          {n:            odnU }{1:                                ~}|
+          {n:                 }{1:                                ~}|
+          {n:           etsaP }{1:                                ~}|
+          {n:                 }{1:                                ~}|
+          {n:     droW tceleS }{1:                                ~}|
+          {n: ecnetneS tceleS }{1:                                ~}|
+          {n:hpargaraP tceleS }{1:                                ~}|
+          {n:     eniL tceleS }{1:                                ~}|
+          {n:    kcolB tceleS }{1:                                ~}|
+          {n:      llA tceleS }{1:                                ~}|
+          {1:                                                 ~}|*8
+                                                            |
+        ]])
+      end
+      feed('<Esc>')
+      command('set norightleft')
+    end)
+
+    if not multigrid then
       describe('"kind" and "menu"', function()
         before_each(function()
           screen:try_resize(30, 8)
@@ -4569,9 +6730,9 @@ describe('builtin popupmenu', function()
         -- oldtest: Test_pum_highlights_custom()
         it('custom highlight groups', function()
           exec([[
-            hi PmenuKind      guifg=Red guibg=Magenta
+            hi PmenuKind      guifg=Red guibg=Plum1
             hi PmenuKindSel   guifg=Red guibg=Grey
-            hi PmenuExtra     guifg=White guibg=Magenta
+            hi PmenuExtra     guifg=White guibg=Plum1
             hi PmenuExtraSel  guifg=Black guibg=Grey
           ]])
           feed('iaw<C-X><C-u>')
@@ -4584,6 +6745,912 @@ describe('builtin popupmenu', function()
             {2:-- }{5:match 1 of 3}               |
           ]])
         end)
+      end)
+
+      -- oldtest: Test_pum_highlights_match()
+      it('can highlight matched text', function()
+        exec([[
+          func Omni_test(findstart, base)
+            if a:findstart
+              return col(".")
+            endif
+            return {
+                  \ 'words': [
+                  \ { 'word': 'foo', 'kind': 'fookind' },
+                  \ { 'word': 'foofoo', 'kind': 'fookind' },
+                  \ { 'word': 'foobar', 'kind': 'fookind' },
+                  \ { 'word': 'fooBaz', 'kind': 'fookind' },
+                  \ { 'word': 'foobala', 'kind': 'fookind' },
+                  \ { 'word': '你好' },
+                  \ { 'word': '你好吗' },
+                  \ { 'word': '你不好吗' },
+                  \ { 'word': '你可好吗' },
+                  \]}
+          endfunc
+
+          func Comp()
+            let col = col('.')
+            if getline('.') == 'f'
+              let col -= 1
+            endif
+            call complete(col, [
+                  \ #{word: "foo", icase: 1},
+                  \ #{word: "Foobar", icase: 1},
+                  \ #{word: "fooBaz", icase: 1},
+                  \])
+            return ''
+          endfunc
+
+          set omnifunc=Omni_test
+          set completeopt=menu,noinsert,fuzzy
+          hi PmenuMatchSel  guifg=Blue guibg=Grey
+          hi PmenuMatch     guifg=Blue guibg=Plum1
+        ]])
+        feed('i<C-X><C-O>')
+        local pum_start = [[
+          ^                                |
+          {s:foo      fookind }{1:               }|
+          {n:foofoo   fookind }{1:               }|
+          {n:foobar   fookind }{1:               }|
+          {n:fooBaz   fookind }{1:               }|
+          {n:foobala  fookind }{1:               }|
+          {n:你好             }{1:               }|
+          {n:你好吗           }{1:               }|
+          {n:你不好吗         }{1:               }|
+          {n:你可好吗         }{1:               }|
+          {1:~                               }|*9
+          {2:-- }{5:match 1 of 9}                 |
+        ]]
+        screen:expect(pum_start)
+        feed('fo')
+        screen:expect([[
+          fo^                              |
+          {ms:fo}{s:o     fookind }{1:                }|
+          {mn:fo}{n:ofoo  fookind }{1:                }|
+          {mn:fo}{n:obar  fookind }{1:                }|
+          {mn:fo}{n:oBaz  fookind }{1:                }|
+          {mn:fo}{n:obala fookind }{1:                }|
+          {1:~                               }|*13
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('<Esc>S<C-X><C-O>')
+        screen:expect(pum_start)
+        feed('你')
+        screen:expect([[
+          你^                              |
+          {ms:你}{s:好           }{1:                 }|
+          {mn:你}{n:好吗         }{1:                 }|
+          {mn:你}{n:不好吗       }{1:                 }|
+          {mn:你}{n:可好吗       }{1:                 }|
+          {1:~                               }|*14
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('吗')
+        screen:expect([[
+          你吗^                            |
+          {ms:你}{s:好}{ms:吗}{s:         }{1:                 }|
+          {mn:你}{n:不好}{mn:吗}{n:       }{1:                 }|
+          {mn:你}{n:可好}{mn:吗}{n:       }{1:                 }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        command('set rightleft')
+        feed('S<C-X><C-O>')
+        local pum_start_rl = [[
+                                         ^ |
+          {1:               }{s: dnikoof      oof}|
+          {1:               }{n: dnikoof   oofoof}|
+          {1:               }{n: dnikoof   raboof}|
+          {1:               }{n: dnikoof   zaBoof}|
+          {1:               }{n: dnikoof  alaboof}|
+          {1:               }{n:             好你}|
+          {1:               }{n:           吗好你}|
+          {1:               }{n:         吗好不你}|
+          {1:               }{n:         吗好可你}|
+          {1:                               ~}|*9
+          {2:-- }{5:match 1 of 9}                 |
+        ]]
+        screen:expect(pum_start_rl)
+        feed('fo')
+        screen:expect([[
+                                       ^ of|
+          {1:                }{s: dnikoof     o}{ms:of}|
+          {1:                }{n: dnikoof  oofo}{mn:of}|
+          {1:                }{n: dnikoof  rabo}{mn:of}|
+          {1:                }{n: dnikoof  zaBo}{mn:of}|
+          {1:                }{n: dnikoof alabo}{mn:of}|
+          {1:                               ~}|*13
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('<Esc>S<C-X><C-O>')
+        screen:expect(pum_start_rl)
+        feed('你')
+        screen:expect([[
+                                       ^ 你|
+          {1:                 }{s:           好}{ms:你}|
+          {1:                 }{n:         吗好}{mn:你}|
+          {1:                 }{n:       吗好不}{mn:你}|
+          {1:                 }{n:       吗好可}{mn:你}|
+          {1:                               ~}|*14
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('吗')
+        screen:expect([[
+                                     ^ 吗你|
+          {1:                 }{s:         }{ms:吗}{s:好}{ms:你}|
+          {1:                 }{n:       }{mn:吗}{n:好不}{mn:你}|
+          {1:                 }{n:       }{mn:吗}{n:好可}{mn:你}|
+          {1:                               ~}|*15
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('<C-E><Esc>')
+        command('set norightleft')
+
+        command('set completeopt-=fuzzy')
+        feed('S<C-X><C-O>')
+        screen:expect(pum_start)
+        feed('fo')
+        screen:expect([[
+          fo^                              |
+          {ms:fo}{s:o     fookind }{1:                }|
+          {mn:fo}{n:ofoo  fookind }{1:                }|
+          {mn:fo}{n:obar  fookind }{1:                }|
+          {mn:fo}{n:oBaz  fookind }{1:                }|
+          {mn:fo}{n:obala fookind }{1:                }|
+          {1:~                               }|*13
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        command('set rightleft')
+        feed('S<C-X><C-O>')
+        screen:expect(pum_start_rl)
+        feed('fo')
+        screen:expect([[
+                                       ^ of|
+          {1:                }{s: dnikoof     o}{ms:of}|
+          {1:                }{n: dnikoof  oofo}{mn:of}|
+          {1:                }{n: dnikoof  rabo}{mn:of}|
+          {1:                }{n: dnikoof  zaBo}{mn:of}|
+          {1:                }{n: dnikoof alabo}{mn:of}|
+          {1:                               ~}|*13
+          {2:-- }{5:match 1 of 9}                 |
+        ]])
+        feed('<C-E><Esc>')
+        command('set norightleft')
+
+        feed('S<C-R>=Comp()<CR>f')
+        screen:expect([[
+          f^                               |
+          {ms:f}{s:oo            }{1:                 }|
+          {mn:F}{n:oobar         }{1:                 }|
+          {mn:f}{n:ooBaz         }{1:                 }|
+          {1:~                               }|*15
+          {2:-- INSERT --}                    |
+        ]])
+        feed('o<BS><C-R>=Comp()<CR>')
+        screen:expect_unchanged(true)
+
+        feed('<Esc>')
+        command('set completeopt+=fuzzy,menu')
+        feed('S hello helio hero h<C-X><C-P>')
+        screen:expect([[
+           hello helio hero h^             |
+          {1:~                }{n: }{mn:h}{n:ello        }{1: }|
+          {1:~                }{n: }{mn:h}{n:elio        }{1: }|
+          {1:~                }{s: }{ms:h}{s:ero         }{1: }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+
+        feed('<Esc>S hello helio hero h<C-X><C-P><C-P>')
+        screen:expect([[
+           hello helio hero h^             |
+          {1:~                }{n: }{mn:h}{n:ello        }{1: }|
+          {1:~                }{s: }{ms:h}{s:elio        }{1: }|
+          {1:~                }{n: }{mn:h}{n:ero         }{1: }|
+          {1:~                               }|*15
+          {2:-- }{5:match 2 of 3}                 |
+        ]])
+
+        feed('<C-E><Esc>')
+      end)
+
+      -- oldtest: Test_pum_highlights_match_with_abbr()
+      it('can highlight matched text with abbr', function()
+        exec([[
+          func Omni_test(findstart, base)
+            if a:findstart
+              return col(".")
+            endif
+            return {
+                  \ 'words': [
+                  \ { 'word': 'foobar', 'abbr': "foobar\t\t!" },
+                  \ { 'word': 'foobaz', 'abbr': "foobaz\t\t!" },
+                  \]}
+          endfunc
+
+          set omnifunc=Omni_test
+          set completeopt=menuone,noinsert
+          hi PmenuMatchSel  guifg=Blue guibg=Grey
+          hi PmenuMatch     guifg=Blue guibg=Plum1
+        ]])
+        feed('i<C-X><C-O>')
+        screen:expect([[
+          ^                                |
+          {s:foobar    !    }{1:                 }|
+          {n:foobaz    !    }{1:                 }|
+          {1:~                               }|*16
+          {2:-- }{5:match 1 of 2}                 |
+        ]])
+        feed('foo')
+        screen:expect([[
+          foo^                             |
+          {ms:foo}{s:bar    !    }{1:                 }|
+          {mn:foo}{n:baz    !    }{1:                 }|
+          {1:~                               }|*16
+          {2:-- }{5:match 1 of 2}                 |
+        ]])
+
+        feed('<C-E><Esc>')
+      end)
+
+      -- oldtest: Test_pum_user_abbr_hlgroup()
+      it('custom abbr_hlgroup override', function()
+        exec([[
+          let s:var = 0
+          func CompleteFunc(findstart, base)
+            if a:findstart
+              return 0
+            endif
+            if s:var == 1
+              return {
+                    \ 'words': [
+                    \ { 'word': 'aword1', 'abbr_hlgroup': 'StrikeFake' },
+                    \ { 'word': '你好', 'abbr_hlgroup': 'StrikeFake' },
+                    \]}
+            endif
+            return {
+                  \ 'words': [
+                  \ { 'word': 'aword1', 'menu': 'extra text 1', 'kind': 'W', 'abbr_hlgroup': 'StrikeFake' },
+                  \ { 'word': 'aword2', 'menu': 'extra text 2', 'kind': 'W', },
+                  \ { 'word': '你好', 'menu': 'extra text 3', 'kind': 'W', 'abbr_hlgroup': 'StrikeFake' },
+                  \]}
+          endfunc
+          func ChangeVar()
+            let s:var = 1
+          endfunc
+          set completeopt=menu
+          set completefunc=CompleteFunc
+
+          hi StrikeFake guifg=DarkRed
+          func HlMatch()
+            hi PmenuMatchSel  guifg=Blue guibg=Grey gui=underline
+            hi PmenuMatch     guifg=Blue guibg=Plum1 gui=underline
+          endfunc
+        ]])
+
+        feed('Saw<C-X><C-U>')
+        screen:expect([[
+          aword1^                          |
+          {ds:aword1}{s: W extra text 1 }{1:          }|
+          {n:aword2 W extra text 2 }{1:          }|
+          {dn:你好}{n:   W extra text 3 }{1:          }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        command('call HlMatch()')
+
+        feed('Saw<C-X><C-U>')
+        screen:expect([[
+          aword1^                          |
+          {uds:aw}{ds:ord1}{s: W extra text 1 }{1:          }|
+          {umn:aw}{n:ord2 W extra text 2 }{1:          }|
+          {dn:你好}{n:   W extra text 3 }{1:          }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-N>')
+        screen:expect([[
+          aword2^                          |
+          {udn:aw}{dn:ord1}{n: W extra text 1 }{1:          }|
+          {ums:aw}{s:ord2 W extra text 2 }{1:          }|
+          {dn:你好}{n:   W extra text 3 }{1:          }|
+          {1:~                               }|*15
+          {2:-- }{5:match 2 of 3}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        command('call ChangeVar()')
+        feed('S<C-X><C-U>')
+        screen:expect([[
+          aword1^                          |
+          {ds:aword1}{s:         }{1:                 }|
+          {dn:你好}{n:           }{1:                 }|
+          {1:~                               }|*16
+          {2:-- }{5:match 1 of 2}                 |
+        ]])
+        feed('<C-E><Esc>')
+      end)
+
+      -- oldtest: Test_pum_user_kind_hlgroup()
+      it('custom kind_hlgroup override', function()
+        exec([[
+          func CompleteFunc( findstart, base )
+            if a:findstart
+              return 0
+            endif
+            return {
+                  \ 'words': [
+                  \ { 'word': 'aword1', 'menu': 'extra text 1', 'kind': 'variable', 'kind_hlgroup': 'KindVar', 'abbr_hlgroup': 'StrikeFake' },
+                  \ { 'word': 'aword2', 'menu': 'extra text 2', 'kind': 'function', 'kind_hlgroup': 'KindFunc' },
+                  \ { 'word': '你好', 'menu': 'extra text 3', 'kind': 'class', 'kind_hlgroup': 'KindClass'  },
+                  \]}
+          endfunc
+          set completeopt=menu
+          set completefunc=CompleteFunc
+
+          hi StrikeFake guifg=DarkRed
+          hi KindVar guifg=DarkYellow
+          hi KindFunc guifg=DarkBlue
+          hi KindClass guifg=DarkGreen
+        ]])
+
+        local attr_ids = screen:get_default_attr_ids()
+        attr_ids.kvs = { foreground = Screen.colors.DarkYellow, background = Screen.colors.Grey }
+        attr_ids.kfn = { foreground = Screen.colors.DarkBlue, background = Screen.colors.Plum1 }
+        attr_ids.kcn = { foreground = Screen.colors.DarkGreen, background = Screen.colors.Plum1 }
+        screen:set_default_attr_ids(attr_ids)
+
+        feed('S<C-X><C-U>')
+        screen:expect([[
+          aword1^                          |
+          {ds:aword1}{s: }{kvs:variable}{s: extra text 1 }{1:   }|
+          {n:aword2 }{kfn:function}{n: extra text 2 }{1:   }|
+          {n:你好   }{kcn:class}{n:    extra text 3 }{1:   }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E><Esc>')
+      end)
+
+      -- oldtest: Test_pum_completeitemalign()
+      it('completeitemalign option', function()
+        screen:try_resize(30, 15)
+        exec([[
+          func Omni_test(findstart, base)
+            if a:findstart
+              return col(".")
+            endif
+            return {
+                  \ 'words': [
+                  \ { 'word': 'foo', 'kind': 'S', 'menu': 'menu' },
+                  \ { 'word': 'bar', 'kind': 'T', 'menu': 'menu' },
+                  \ { 'word': '你好', 'kind': 'C', 'menu': '中文' },
+                  \]}
+          endfunc
+
+          func Omni_long(findstart, base)
+            if a:findstart
+              return col(".")
+            endif
+            return {
+                  \ 'words': [
+                  \ { 'word': 'loooong_foo', 'kind': 'S', 'menu': 'menu' },
+                  \ { 'word': 'loooong_bar', 'kind': 'T', 'menu': 'menu' },
+                  \]}
+          endfunc
+          set omnifunc=Omni_test
+        ]])
+        -- T1
+        command('set cia=abbr,kind,menu')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          foo^                           |
+          {s:foo  S menu    }{1:               }|
+          {n:bar  T menu    }{1:               }|
+          {n:你好 C 中文    }{1:               }|
+          {1:~                             }|*10
+          {2:-- }{5:match 1 of 3}               |
+        ]])
+        feed('<C-E><ESC>')
+        -- T2
+        command('set cia=abbr,menu,kind')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          foo^                           |
+          {s:foo  menu S    }{1:               }|
+          {n:bar  menu T    }{1:               }|
+          {n:你好 中文 C    }{1:               }|
+          {1:~                             }|*10
+          {2:-- }{5:match 1 of 3}               |
+        ]])
+        feed('<C-E><ESC>')
+        -- T3
+        command('set cia=kind,abbr,menu')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          foo^                           |
+          {s:S foo  menu    }{1:               }|
+          {n:T bar  menu    }{1:               }|
+          {n:C 你好 中文    }{1:               }|
+          {1:~                             }|*10
+          {2:-- }{5:match 1 of 3}               |
+        ]])
+        feed('<C-E><ESC>')
+        -- T4
+        command('set cia=kind,menu,abbr')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          foo^                           |
+          {s:S menu foo     }{1:               }|
+          {n:T menu bar     }{1:               }|
+          {n:C 中文 你好    }{1:               }|
+          {1:~                             }|*10
+          {2:-- }{5:match 1 of 3}               |
+        ]])
+        feed('<C-E><ESC>')
+        -- T5
+        command('set cia=menu,abbr,kind')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          foo^                           |
+          {s:menu foo  S    }{1:               }|
+          {n:menu bar  T    }{1:               }|
+          {n:中文 你好 C    }{1:               }|
+          {1:~                             }|*10
+          {2:-- }{5:match 1 of 3}               |
+        ]])
+        feed('<C-E><ESC>')
+        -- T6
+        command('set cia=menu,kind,abbr')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          foo^                           |
+          {s:menu S foo     }{1:               }|
+          {n:menu T bar     }{1:               }|
+          {n:中文 C 你好    }{1:               }|
+          {1:~                             }|*10
+          {2:-- }{5:match 1 of 3}               |
+        ]])
+        feed('<C-E><ESC>')
+        -- T7
+        command('set cia&')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          foo^                           |
+          {s:foo  S menu    }{1:               }|
+          {n:bar  T menu    }{1:               }|
+          {n:你好 C 中文    }{1:               }|
+          {1:~                             }|*10
+          {2:-- }{5:match 1 of 3}               |
+        ]])
+        feed('<C-E><ESC>')
+
+        -- Test_pum_completeitemalign_07
+        command('set cia=menu,kind,abbr columns=12 cmdheight=2 omnifunc=Omni_long')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          loooong_foo^ |
+          {s:menu S loooo}|
+          {n:menu T loooo}|
+          {1:~           }|*10
+                      |
+          {2:--}          |
+        ]])
+        feed('<C-E><ESC>')
+      end)
+
+      -- oldtest: Test_pum_matchins_highlight()
+      it('with ComplMatchIns highlight', function()
+        exec([[
+          let g:change = 0
+          func Omni_test(findstart, base)
+            if a:findstart
+              return col(".")
+            endif
+            if g:change == 0
+              return [#{word: "foo"}, #{word: "bar"}, #{word: "你好"}]
+            endif
+            return [#{word: "foo", info: "info"}, #{word: "bar"}, #{word: "你好"}]
+          endfunc
+          set completeopt-=popup completeopt+=preview
+          set omnifunc=Omni_test
+          hi ComplMatchIns guifg=red
+        ]])
+
+        feed('Sαβγ <C-X><C-O>')
+        screen:expect([[
+          αβγ {8:foo}^                         |
+          {1:~  }{s: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{n: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        feed('Sαβγ <C-X><C-O><C-N>')
+        screen:expect([[
+          αβγ {8:bar}^                         |
+          {1:~  }{n: foo            }{1:             }|
+          {1:~  }{s: bar            }{1:             }|
+          {1:~  }{n: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 2 of 3}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        feed('Sαβγ <C-X><C-O><C-N><C-N>')
+        screen:expect([[
+          αβγ {8:你好}^                        |
+          {1:~  }{n: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{s: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 3 of 3}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        -- restore after accept
+        feed('Sαβγ <C-X><C-O><C-Y>')
+        screen:expect([[
+          αβγ foo^                         |
+          {1:~                               }|*18
+          {2:-- INSERT --}                    |
+        ]])
+        feed('<Esc>')
+
+        -- restore after cancel completion
+        feed('Sαβγ <C-X><C-O><Space>')
+        screen:expect([[
+          αβγ foo ^                        |
+          {1:~                               }|*18
+          {2:-- INSERT --}                    |
+        ]])
+        feed('<Esc>')
+
+        -- text after the inserted text shouldn't be highlighted
+        feed('0ea <C-X><C-O>')
+        screen:expect([[
+          αβγ {8:foo}^ foo                     |
+          {1:~  }{s: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{n: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-P>')
+        screen:expect([[
+          αβγ ^ foo                        |
+          {1:~  }{n: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{n: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{8:Back at original}             |
+        ]])
+        feed('<C-P>')
+        screen:expect([[
+          αβγ {8:你好}^ foo                    |
+          {1:~  }{n: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{s: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 3 of 3}                 |
+        ]])
+        feed('<C-Y>')
+        screen:expect([[
+          αβγ 你好^ foo                    |
+          {1:~                               }|*18
+          {2:-- INSERT --}                    |
+        ]])
+        feed('<Esc>')
+
+        feed(':let g:change=1<CR>S<C-X><C-O>')
+        screen:expect([[
+          info                            |
+          {1:~                               }|*2
+          {3:[Scratch] [Preview]             }|
+          {8:foo}^                             |
+          {s:foo            }{1:                 }|
+          {n:bar            }{1:                 }|
+          {n:你好           }{1:                 }|
+          {1:~                               }|*10
+          {4:[No Name] [+]                   }|
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<Esc>')
+      end)
+
+      -- oldtest: Test_pum_matchins_highlight_combine()
+      it('with ComplMatchIns, Normal and CursorLine highlights', function()
+        exec([[
+          func Omni_test(findstart, base)
+            if a:findstart
+              return col(".")
+            endif
+            return [#{word: "foo"}, #{word: "bar"}, #{word: "你好"}]
+          endfunc
+          set completeopt-=popup completeopt+=preview
+          " Avoid unwanted results in case local workspace has a "tags" file.
+          set complete-=t
+          set omnifunc=Omni_test
+          hi Normal guibg=blue
+          hi CursorLine guibg=green guifg=white
+          set cursorline
+          call setline(1, 'aaa bbb')
+        ]])
+
+        -- when ComplMatchIns is not set, CursorLine applies normally
+        feed('0ea <C-X><C-O>')
+        screen:expect([[
+          {10:aaa foo^ bbb                     }|
+          {1:~  }{s: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{n: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E>')
+        screen:expect([[
+          {10:aaa ^ bbb                        }|
+          {1:~                               }|*18
+          {2:-- INSERT --}                    |
+        ]])
+        feed('<BS><Esc>')
+
+        -- when ComplMatchIns is set, it is applied over CursorLine
+        command('hi ComplMatchIns guifg=Yellow')
+        feed('0ea <C-X><C-O>')
+        screen:expect([[
+          {10:aaa }{9:foo}{10:^ bbb                     }|
+          {1:~  }{s: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{n: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-P>')
+        screen:expect([[
+          {10:aaa ^ bbb                        }|
+          {1:~  }{n: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{n: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{8:Back at original}             |
+        ]])
+        feed('<C-P>')
+        screen:expect([[
+          {10:aaa }{9:你好}{10:^ bbb                    }|
+          {1:~  }{n: foo            }{1:             }|
+          {1:~  }{n: bar            }{1:             }|
+          {1:~  }{s: 你好           }{1:             }|
+          {1:~                               }|*15
+          {2:-- }{5:match 3 of 3}                 |
+        ]])
+        feed('<C-E>')
+        screen:expect([[
+          {10:aaa ^ bbb                        }|
+          {1:~                               }|*18
+          {2:-- INSERT --}                    |
+        ]])
+        feed('<Esc>')
+
+        -- Does not highlight the compl leader
+        command('set completeopt+=menuone,noselect')
+        feed('S<C-X><C-O>')
+        local pum_start = [[
+          {10:^                                }|
+          {n:foo            }{1:                 }|
+          {n:bar            }{1:                 }|
+          {n:你好           }{1:                 }|
+          {1:~                               }|*15
+          {2:-- }{8:Back at original}             |
+        ]]
+        screen:expect(pum_start)
+        feed('f<C-N>')
+        screen:expect([[
+          {10:f}{9:oo}{10:^                             }|
+          {s:foo            }{1:                 }|
+          {1:~                               }|*17
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E><ESC>')
+
+        command('set completeopt+=fuzzy')
+        feed('S<C-X><C-O>')
+        screen:expect(pum_start)
+        feed('f<C-N>')
+        screen:expect([[
+          {10:foo^                             }|
+          {s:foo            }{1:                 }|
+          {1:~                               }|*17
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E><Esc>')
+
+        command('set completeopt-=fuzzy')
+        feed('Sf<C-N>')
+        screen:expect([[
+          {10:f^                               }|
+          {1:~                               }|*18
+          {2:-- }{6:Pattern not found}            |
+        ]])
+        feed('<C-E><Esc>')
+      end)
+
+      -- oldtest: Test_pum_complete_with_special_characters()
+      it('multi-line completion', function()
+        exec([[
+          func Omni_test(findstart, base)
+            if a:findstart
+              return col(".")
+            endif
+            return [#{word: "func ()\n\t\nend", abbr: "function ()",}, #{word: "foobar"}, #{word: "你好\n\t\n我好"}]
+          endfunc
+          set omnifunc=Omni_test
+          inoremap <F5> <Cmd>call complete(col('.'), [ "my\n\tmulti\nline", "my\n\t\tmulti\nline" ])<CR>
+        ]])
+
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          func ()                         |
+                                          |
+          end^                             |
+          {s:function ()    }{1:                 }|
+          {n:foobar         }{1:                 }|
+          {n:你好^@  ^@我好 }{1:                 }|
+          {1:~                               }|*13
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+
+        feed('<C-N>')
+        screen:expect([[
+          foobar^                          |
+          {n:function ()    }{1:                 }|
+          {s:foobar         }{1:                 }|
+          {n:你好^@  ^@我好 }{1:                 }|
+          {1:~                               }|*15
+          {2:-- }{5:match 2 of 3}                 |
+        ]])
+        feed('<C-E><ESC>')
+
+        feed('Shello  hero<ESC>hhhhha<C-X><C-O>')
+        screen:expect([[
+          hello func ()                   |
+                                          |
+          end^ hero                        |
+          {1:~    }{s: function ()    }{1:           }|
+          {1:~    }{n: foobar         }{1:           }|
+          {1:~    }{n: 你好^@  ^@我好 }{1:           }|
+          {1:~                               }|*13
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+
+        feed('<C-N>')
+        screen:expect([[
+          hello foobar^ hero               |
+          {1:~    }{n: function ()    }{1:           }|
+          {1:~    }{s: foobar         }{1:           }|
+          {1:~    }{n: 你好^@  ^@我好 }{1:           }|
+          {1:~                               }|*15
+          {2:-- }{5:match 2 of 3}                 |
+        ]])
+
+        feed('<C-N>')
+        screen:expect([[
+          hello 你好                      |
+                                          |
+          我好^ hero                       |
+          {1:~  }{n: function ()    }{1:             }|
+          {1:~  }{n: foobar         }{1:             }|
+          {1:~  }{s: 你好^@  ^@我好 }{1:             }|
+          {1:~                               }|*13
+          {2:-- }{5:match 3 of 3}                 |
+        ]])
+
+        feed('<C-N>')
+        screen:expect([[
+          hello ^ hero                     |
+          {1:~    }{n: function ()    }{1:           }|
+          {1:~    }{n: foobar         }{1:           }|
+          {1:~    }{n: 你好^@  ^@我好 }{1:           }|
+          {1:~                               }|*15
+          {2:-- }{8:Back at original}             |
+        ]])
+        feed('<C-E><ESC>')
+
+        command(':hi ComplMatchIns guifg=red')
+        feed('S<C-X><C-O>')
+        screen:expect([[
+          {8:func ()}                         |
+          {8:        }                        |
+          {8:end}^                             |
+          {s:function ()    }{1:                 }|
+          {n:foobar         }{1:                 }|
+          {n:你好^@  ^@我好 }{1:                 }|
+          {1:~                               }|*13
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E><ESC>')
+
+        feed('Shello  hero<ESC>hhhhha<C-X><C-O>')
+        screen:expect([[
+          hello {8:func ()}                   |
+          {8:        }                        |
+          {8:end^ }hero                        |
+          {1:~    }{s: function ()    }{1:           }|
+          {1:~    }{n: foobar         }{1:           }|
+          {1:~    }{n: 你好^@  ^@我好 }{1:           }|
+          {1:~                               }|*13
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+        feed('<C-E><ESC>')
+
+        command('setlocal autoindent shiftwidth=2 tabstop=2')
+        feed('Slocal a = <C-X><C-O>')
+        screen:expect([[
+          local a = {8:func ()}               |
+          {8:  }                              |
+          {8:end}^                             |
+          {1:~ }{s: function ()    }{1:              }|
+          {1:~ }{n: foobar         }{1:              }|
+          {1:~ }{n: 你好^@  ^@我好 }{1:              }|
+          {1:~                               }|*13
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+
+        feed('<C-Y>')
+        screen:expect([[
+          local a = {8:func ()}               |
+          {8:  }                              |
+          end^                             |
+          {1:~                               }|*16
+          {2:-- INSERT --}                    |
+        ]])
+
+        feed('<ESC>kAlocal b = <C-X><C-O>')
+        screen:expect([[
+          local a = {8:func ()}               |
+            local b = {8:func ()}             |
+          {8:    }                            |
+          {8:  end}^                           |
+          end {s: function ()    }            |
+          {1:~   }{n: foobar         }{1:            }|
+          {1:~   }{n: 你好^@  ^@我好 }{1:            }|
+          {1:~                               }|*12
+          {2:-- }{5:match 1 of 3}                 |
+        ]])
+
+        feed('<C-Y>')
+        screen:expect([[
+          local a = {8:func ()}               |
+            local b = {8:func ()}             |
+          {8:    }                            |
+            end^                           |
+          end                             |
+          {1:~                               }|*14
+          {2:-- INSERT --}                    |
+        ]])
+
+        feed('<Esc>ggVGd')
+        command('filetype indent on')
+        command('setlocal noautoindent shiftwidth& tabstop&')
+        command('setlocal ft=lua')
+        feed('S<F5>')
+        screen:expect([[
+          {8:my}                              |
+          {8:        multi}                   |
+          {8:line}^                            |
+          {s:my^@  multi^@line   }{1:            }|
+          {n:my^@    multi^@line }{1:            }|
+          {1:~                               }|*14
+          {2:-- INSERT --}                    |
+        ]])
       end)
     end
   end

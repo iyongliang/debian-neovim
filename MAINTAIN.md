@@ -79,6 +79,8 @@ When a (non-experimental) feature is slated to be removed it should:
       `v0.10.0-dev-1957+gd676746c33` then use `0.12`.
     - For Vimscript features, use `v:lua.vim.deprecate()`. Use the same version
       as described for Lua features.
+    - `vim.deprecate(…, 'x.y.z')` where major version `x` is greater than the
+      current Nvim major version, is always treated as _soft_ deprecation.
 2. Be _hard_ deprecated in a following a release in which it was soft deprecated.
     - Use of the deprecated feature will still work but should issue a warning.
     - Features implemented in C will need bespoke implementations to communicate
@@ -129,8 +131,6 @@ Some can be auto-bumped by `scripts/bump_deps.lua`.
 * [gettext](https://ftp.gnu.org/pub/gnu/gettext/)
 * [libiconv](https://ftp.gnu.org/pub/gnu/libiconv)
 * [libuv](https://github.com/libuv/libuv)
-* [libvterm](https://www.leonerd.org.uk/code/libvterm/)
-    * Downloading from the original source is unreliable, so we use our [mirror](https://github.com/neovim/libvterm) instead.
 * [lua-compat](https://github.com/keplerproject/lua-compat-5.3)
 * [tree-sitter](https://github.com/tree-sitter/tree-sitter)
 * [unibilium](https://github.com/neovim/unibilium)
@@ -142,6 +142,8 @@ Some can be auto-bumped by `scripts/bump_deps.lua`.
 These dependencies are "vendored" (inlined), we must update the sources manually:
 
 * `src/mpack/`: [libmpack](https://github.com/libmpack/libmpack)
+    * send improvements upstream!
+* `src/mpack/lmpack.c`: [libmpack-lua](https://github.com/libmpack/libmpack-lua)
     * send improvements upstream!
 * `src/xdiff/`: [xdiff](https://github.com/git/git/tree/master/xdiff)
 * `src/cjson/`: [lua-cjson](https://github.com/openresty/lua-cjson)
@@ -160,7 +162,6 @@ These dependencies are "vendored" (inlined), we must update the sources manually
     * Needs to be updated when LPeg is updated.
 * `src/bit.c`: only for PUC lua: port of `require'bit'` from luajit https://bitop.luajit.org/
 * `runtime/lua/coxpcall.lua`: coxpcall (only needed for PUC lua, builtin to luajit)
-* `src/termkey`: [libtermkey](https://github.com/neovim/libtermkey)
 
 Other dependencies
 --------------------------
@@ -170,6 +171,9 @@ Other dependencies
     * https://github.com/nvim-winget
 * Org secrets/tokens:
     * `CODECOV_TOKEN`
+    * `BACKPORT_KEY`
+* Org/repo variables:
+    * `BACKPORT_APP`
 * Domain names (held in https://namecheap.com):
     * neovim.org
     * neovim.io
@@ -185,10 +189,10 @@ Refactoring
 
 Refactoring Vim structurally and aesthetically is an important goal of Neovim.
 But there are some modules that should not be changed significantly, because
-they are maintained Vim, at present. Until someone takes "ownership" of these
-modules, the cost of any significant changes (including style or structural
-changes that re-arrange the code) to these modules outweighs the benefit. The
-modules are:
+they are maintained by Vim, at present. Until someone takes "ownership" of
+these modules, the cost of any significant changes (including style or
+structural changes that re-arrange the code) to these modules outweighs the
+benefit. The modules are:
 
 - `regexp.c`
 - `indent_c.c`
@@ -237,4 +241,4 @@ See also
 --------
 
 * https://github.com/neovim/neovim/issues/862
-* https://github.com/git/git/blob/master/Documentation/howto/maintain-git.txt
+* https://github.com/git/git/blob/master/Documentation/howto/maintain-git.adoc

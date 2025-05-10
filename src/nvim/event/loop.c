@@ -20,10 +20,10 @@ void loop_init(Loop *loop, void *data)
   loop->recursive = 0;
   loop->closing = false;
   loop->uv.data = loop;
-  loop->children = kl_init(WatcherPtr);
-  loop->events = multiqueue_new_parent(loop_on_put, loop);
+  kv_init(loop->children);
+  loop->events = multiqueue_new(loop_on_put, loop);
   loop->fast_events = multiqueue_new_child(loop->events);
-  loop->thread_events = multiqueue_new_parent(NULL, NULL);
+  loop->thread_events = multiqueue_new(NULL, NULL);
   uv_mutex_init(&loop->mutex);
   uv_async_init(&loop->uv, &loop->async, async_cb);
   uv_signal_init(&loop->uv, &loop->children_watcher);
@@ -187,7 +187,7 @@ bool loop_close(Loop *loop, bool wait)
   multiqueue_free(loop->fast_events);
   multiqueue_free(loop->thread_events);
   multiqueue_free(loop->events);
-  kl_destroy(WatcherPtr, loop->children);
+  kv_destroy(loop->children);
   return rv;
 }
 
@@ -212,10 +212,7 @@ static void async_cb(uv_async_t *handle)
   Loop *l = handle->loop->data;
   uv_mutex_lock(&l->mutex);
   // Flush thread_events to fast_events for processing on main loop.
-  while (!multiqueue_empty(l->thread_events)) {
-    Event ev = multiqueue_get(l->thread_events);
-    multiqueue_put_event(l->fast_events, ev);
-  }
+  multiqueue_move_events(l->fast_events, l->thread_events);
   uv_mutex_unlock(&l->mutex);
 }
 

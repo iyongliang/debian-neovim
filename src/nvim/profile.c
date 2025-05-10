@@ -5,11 +5,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <uv.h>
 
 #include "nvim/ascii_defs.h"
 #include "nvim/charset.h"
 #include "nvim/cmdexpand_defs.h"
 #include "nvim/debugger.h"
+#include "nvim/errors.h"
 #include "nvim/eval.h"
 #include "nvim/eval/typval_defs.h"
 #include "nvim/eval/userfunc.h"
@@ -382,19 +384,19 @@ void set_context_in_profile_cmd(expand_T *xp, const char *arg)
   xp->xp_context = EXPAND_NOTHING;
 }
 
-static proftime_T inchar_time;
+static proftime_T wait_time;
 
 /// Called when starting to wait for the user to type a character.
-void prof_inchar_enter(void)
+void prof_input_start(void)
 {
-  inchar_time = profile_start();
+  wait_time = profile_start();
 }
 
 /// Called when finished waiting for the user to type a character.
-void prof_inchar_exit(void)
+void prof_input_end(void)
 {
-  inchar_time = profile_end(inchar_time);
-  profile_set_wait(profile_add(profile_get_wait(), inchar_time));
+  wait_time = profile_end(wait_time);
+  profile_set_wait(profile_add(profile_get_wait(), wait_time));
 }
 
 /// @return  true when a function defined in the current script should be
@@ -614,11 +616,7 @@ static void func_dump_profile(FILE *fd)
         }
         if (fp->uf_script_ctx.sc_sid != 0) {
           bool should_free;
-          const LastSet last_set = (LastSet){
-            .script_ctx = fp->uf_script_ctx,
-            .channel_id = 0,
-          };
-          char *p = get_scriptname(last_set, &should_free);
+          char *p = get_scriptname(fp->uf_script_ctx, &should_free);
           fprintf(fd, "    Defined: %s:%" PRIdLINENR "\n",
                   p, fp->uf_script_ctx.sc_lnum);
           if (should_free) {
@@ -949,8 +947,8 @@ void time_msg(const char *mesg, const proftime_T *start)
 /// Initializes the `time_fd` stream for the --startuptime report.
 ///
 /// @param fname startuptime report file path
-/// @param process_name name of the current Nvim process to write in the report.
-void time_init(const char *fname, const char *process_name)
+/// @param proc_name name of the current Nvim process to write in the report.
+void time_init(const char *fname, const char *proc_name)
 {
   const size_t bufsize = 8192;  // Big enough for the entire --startuptime report.
   time_fd = fopen(fname, "a");
@@ -970,7 +968,7 @@ void time_init(const char *fname, const char *process_name)
     fprintf(stderr, "time_init: setvbuf failed: %d %s", r, uv_err_name(r));
     return;
   }
-  fprintf(time_fd, "--- Startup times for process: %s ---\n", process_name);
+  fprintf(time_fd, "--- Startup times for process: %s ---\n", proc_name);
 }
 
 /// Flushes the startuptimes to disk for the current process
